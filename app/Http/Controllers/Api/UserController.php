@@ -8,10 +8,28 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    /**
+     * Get list of all users with their roles
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function index()
     {
-        $users = User::select('id', 'name')->get();
+        $users = User::with('roles:id,name')
+            ->select('id', 'name', 'email')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'roles' => $user->roles->pluck('name'),
+                ];
+            });
 
-        return response()->json($users);
+        return response()->json([
+            'success' => true,
+            'data' => $users
+        ]);
     }
 }

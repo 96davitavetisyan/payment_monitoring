@@ -3,67 +3,97 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\UpdateProjectRequest;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function index()
     {
-        $projects = auth()->user()->can('view all projects')
-            ? Project::all()
-            : Project::forUser(auth()->id())->get();
+        // Check if user can view all projects or only their own
+        $projects = auth()->user()->can('view_all_projects')
+            ? Project::with('responsibleUser')->get()
+            : Project::forUser(auth()->id())->with('responsibleUser')->get();
 
-        return response()->json($projects);
-    }
-
-    public function create()
-    {
-        return view('projects.create');
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string',
-            'start_date' => 'nullable|date',
-            'responsible_user_id' => 'required|exists:users,id',
-            'status' => 'required'
+        return response()->json([
+            'success' => true,
+            'data' => $projects
         ]);
+    }
 
-        $project = Project::create($data);
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \App\Http\Requests\StoreProjectRequest  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(StoreProjectRequest $request)
+    {
+        $project = Project::create($request->validated());
 
         return response()->json([
             'success' => true,
             'message' => 'Project created',
-            'data' => $project
+            'data' => $project->load('responsibleUser')
         ], 201);
     }
 
-    public function edit(Project $project)
+    /**
+     * Display the specified resource.
+     *
+     * @param  Project  $project
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Project $project)
     {
-        return view('projects.edit', compact('project'));
+        // Check if user can view this project
+        if (!auth()->user()->can('view_all_projects') && $project->responsible_user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $project->load('responsibleUser')
+        ]);
     }
 
-    public function update(Request $request, Project $project)
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\UpdateProjectRequest  $request
+     * @param  Project  $project
+     * @return \Illuminate\Http\Response
+     */
+    public function update(UpdateProjectRequest $request, Project $project)
     {
-        $data = $request->validate([
-            'name' => 'required|string',
-            'start_date' => 'nullable|date',
-            'responsible_user_id' => 'required|exists:users,id',
-            'status' => 'required|in:active,suspended',
-        ]);
-
-        $project->update($data);
+        $project->update($request->validated());
 
         return response()->json([
             'success' => true,
             'message' => 'Project updated',
-            'data' => $project
+            'data' => $project->fresh()->load('responsibleUser')
         ]);
     }
 
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  Project  $project
+     * @return \Illuminate\Http\Response
+     */
     public function destroy(Project $project)
     {
+        // Check permission
+        if (!auth()->user()->can('delete_projects')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $project->delete();
 
         return response()->json([
@@ -72,9 +102,19 @@ class ProjectController extends Controller
         ]);
     }
 
-    // Suspend / Activate
+    /**
+     * Toggle project status (activate/suspend)
+     *
+     * @param  Project  $project
+     * @return \Illuminate\Http\Response
+     */
     public function toggleStatus(Project $project)
     {
+        // Check if user can suspend/activate projects
+        if (!auth()->user()->can('suspend_projects') && !auth()->user()->can('activate_projects')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $project->status = $project->status === 'active' ? 'suspended' : 'active';
         $project->save();
 

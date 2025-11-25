@@ -9,32 +9,32 @@ class UsersSeeder extends Seeder
 {
     public function run()
     {
-        // Пользователь Superadmin
+        // Super Administrator
         $superadmin = User::firstOrCreate(
             ['email' => 'superadmin@example.com'],
             ['name' => 'Super Admin', 'password' => bcrypt('password')]
         );
-        $superadmin->assignRole('Superadmin');
+        $superadmin->assignRole('Super Administrator');
 
-        // Пользователь Accountant
+        // Accountant
         $accountant = User::firstOrCreate(
             ['email' => 'accountant@example.com'],
             ['name' => 'Accountant', 'password' => bcrypt('password')]
         );
         $accountant->assignRole('Accountant');
 
-        // Пользователь Account Manager
-        $accountManager = User::firstOrCreate(
-            ['email' => 'accountmanager@example.com'],
-            ['name' => 'Account Manager', 'password' => bcrypt('password')]
-        );
-        $accountManager->assignRole('Account Manager');
-
-        // Пользователь Office Manager
+        // Office Manager
         $officeManager = User::firstOrCreate(
             ['email' => 'officemanager@example.com'],
             ['name' => 'Office Manager', 'password' => bcrypt('password')]
         );
         $officeManager->assignRole('Office Manager');
+
+        // Client Relationship Manager
+        $clientManager = User::firstOrCreate(
+            ['email' => 'clientmanager@example.com'],
+            ['name' => 'Client Relationship Manager', 'password' => bcrypt('password')]
+        );
+        $clientManager->assignRole('Client Relationship Manager');
     }
 }

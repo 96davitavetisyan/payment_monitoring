@@ -23,7 +23,6 @@
     </head>
     <body>
     <div id="app">
-        <app-header v-if="$route.path !== '/login'"></app-header>
         <router-view></router-view>
     </div>
 

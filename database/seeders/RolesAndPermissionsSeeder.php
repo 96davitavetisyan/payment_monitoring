@@ -10,24 +10,70 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run()
     {
-        // Сначала создаём разрешения
-        Permission::firstOrCreate(['name' => 'view all projects']);
-        Permission::firstOrCreate(['name' => 'edit projects']);
-        Permission::firstOrCreate(['name' => 'suspend projects']);
-        Permission::firstOrCreate(['name' => 'view transactions']);
-        Permission::firstOrCreate(['name' => 'edit transactions']);
-        Permission::firstOrCreate(['name' => 'manage feedback']);
+        // Create permissions with underscores
+        Permission::firstOrCreate(['name' => 'create_projects']);
+        Permission::firstOrCreate(['name' => 'edit_projects']);
+        Permission::firstOrCreate(['name' => 'view_projects']);
+        Permission::firstOrCreate(['name' => 'delete_projects']);
+        Permission::firstOrCreate(['name' => 'view_all_projects']);
+        Permission::firstOrCreate(['name' => 'suspend_projects']);
+        Permission::firstOrCreate(['name' => 'activate_projects']);
+        Permission::firstOrCreate(['name' => 'view_transactions']);
+        Permission::firstOrCreate(['name' => 'edit_transactions']);
+        Permission::firstOrCreate(['name' => 'create_transactions']);
+        Permission::firstOrCreate(['name' => 'delete_transactions']);
+        Permission::firstOrCreate(['name' => 'manage_feedback']);
+        Permission::firstOrCreate(['name' => 'create_feedback']);
+        Permission::firstOrCreate(['name' => 'view_feedback']);
 
-        // Создаём роли
-        $superadmin = Role::firstOrCreate(['name' => 'Superadmin']);
+        // Create roles
+        $superAdmin = Role::firstOrCreate(['name' => 'Super Administrator']);
         $accountant = Role::firstOrCreate(['name' => 'Accountant']);
         $officeManager = Role::firstOrCreate(['name' => 'Office Manager']);
-        $accountManager = Role::firstOrCreate(['name' => 'Account Manager']);
+        $clientManager = Role::firstOrCreate(['name' => 'Client Relationship Manager']);
 
-        // Присваиваем разрешения ролям
-        $superadmin->syncPermissions(Permission::all()); // всё может
-        $accountant->syncPermissions(['view all projects', 'view transactions']);
-        $officeManager->syncPermissions(['view all projects', 'edit projects', 'view transactions']);
-        $accountManager->syncPermissions(['view all projects', 'view transactions', 'manage feedback']);
+        // Assign permissions according to specification
+        
+        // Super Administrator: can create and edit projects, view, delete, and add new projects
+        $superAdmin->syncPermissions([
+            'create_projects',
+            'edit_projects',
+            'view_projects',
+            'view_all_projects',
+            'delete_projects',
+            'suspend_projects',
+            'activate_projects',
+            'view_transactions',
+            'edit_transactions',
+            'create_transactions',
+            'delete_transactions',
+            'view_feedback',
+        ]);
+
+        // Accountant: can suspend or activate projects, view and edit Clients/Transactions table
+        $accountant->syncPermissions([
+            'view_all_projects',
+            'suspend_projects',
+            'activate_projects',
+            'view_transactions',
+            'edit_transactions',
+            'create_transactions',
+            'delete_transactions',
+        ]);
+
+        // Office Manager: can view projects and manage office operations
+        $officeManager->syncPermissions([
+            'view_all_projects',
+            'view_transactions',
+        ]);
+
+        // Client Relationship Manager: can record feedback from clients
+        $clientManager->syncPermissions([
+            'view_all_projects',
+            'view_transactions',
+            'manage_feedback',
+            'create_feedback',
+            'view_feedback',
+        ]);
     }
 }

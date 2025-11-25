@@ -6,19 +6,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\AuthController;
-
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
 
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -32,13 +22,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('projects/{project}', [ProjectController::class, 'show']);
     Route::put('projects/{project}', [ProjectController::class, 'update']);
     Route::delete('projects/{project}', [ProjectController::class, 'destroy']);
-    Route::get('projects/{project}/toggle-status', [ProjectController::class, 'toggleStatus']);
+    Route::post('projects/{project}/toggle-status', [ProjectController::class, 'toggleStatus']);
 
     // Transactions
     Route::get('projects/{project}/transactions', [TransactionController::class, 'index']);
     Route::post('projects/{project}/transactions', [TransactionController::class, 'store']);
     Route::put('projects/{project}/transactions/{transaction}', [TransactionController::class, 'update']);
     Route::delete('projects/{project}/transactions/{transaction}', [TransactionController::class, 'destroy']);
+    Route::post('projects/{project}/transactions/{transaction}/toggle-status', [TransactionController::class, 'toggleStatus']);
 
     // Feedback
     Route::get('projects/{project}/feedbacks', [FeedbackController::class, 'index']);
@@ -46,5 +37,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('projects/{project}/feedbacks/{feedback}', [FeedbackController::class, 'update']);
     Route::delete('projects/{project}/feedbacks/{feedback}', [FeedbackController::class, 'destroy']);
 
-    Route::get('/users', [UserController::class, 'index'])->middleware('auth:sanctum');
+    // Products
+    Route::get('products', [ProductController::class, 'index']);
+    Route::post('products', [ProductController::class, 'store']);
+    Route::put('products/{product}', [ProductController::class, 'update']);
+    Route::delete('products/{product}', [ProductController::class, 'destroy']);
+    Route::get('products/{product}/companies', [ProductController::class, 'companies']);
+
+    // Companies
+    Route::get('companies', [CompanyController::class, 'index']);
+    Route::post('companies', [CompanyController::class, 'store']);
+    Route::get('companies/{company}', [CompanyController::class, 'show']);
+    Route::put('companies/{company}', [CompanyController::class, 'update']);
+    Route::delete('companies/{company}', [CompanyController::class, 'destroy']);
+    Route::get('companies/{company}/subscriptions', [CompanyController::class, 'subscriptions']);
+
+    // Users
+    Route::get('/users', [UserController::class, 'index']);
 });
