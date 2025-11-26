@@ -281,24 +281,45 @@ export default {
             this.attachmentFile = event.target.files[0];
         },
         saveTransaction() {
+            console.log(4485484)
             const formData = new FormData();
 
             Object.keys(this.currentTransaction).forEach(key => {
-                if (this.currentTransaction[key] !== null && this.currentTransaction[key] !== '') {
-                    formData.append(key, this.currentTransaction[key]);
-                }
-            });
+                let value = this.currentTransaction[key];
 
+                if (value !== null && value !== '') {
+                    if (key === 'is_active') {
+                        value = (value === true || value === 'true') ? 1 : 0;
+                    }
+
+                    if (key.includes('date') && typeof value === 'string' && value.includes('T')) {
+                        value = value.split('T')[0];
+                    }
+
+                    formData.append(key, value);
+                }
+            })
             if (this.contractFile) formData.append('contract_file', this.contractFile);
             if (this.attachmentFile) formData.append('file', this.attachmentFile);
 
+            // formData.forEach((value, key) => {
+            //     if (key === 'company') {
+            //         formData.delete(key);
+            //     }
+            // });
+            if(this.isEditing){
+                formData.append('_method', 'PUT');
+            }
+
+            formData.forEach((value, key) => {
+                console.log(key, value);
+
+            });
             const url = this.isEditing
                 ? `/api/projects/${this.projectId}/transactions/${this.currentTransaction.id}`
                 : `/api/projects/${this.projectId}/transactions`;
 
-            const method = this.isEditing ? 'put' : 'post';
-
-            axios[method](url, formData, {
+            axios['post'](url, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             })
                 .then(() => {

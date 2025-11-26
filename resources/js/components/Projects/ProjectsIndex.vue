@@ -24,7 +24,11 @@
                 </thead>
                 <tbody>
                 <tr v-for="project in projects" :key="project.id">
-                    <td>{{ project.name }}</td>
+                    <td>
+                        <a href="#" @click.prevent="goToTransactions(project.id)">
+                            {{ project.name }}
+                        </a>
+                    </td>
                     <td>{{ project.start_date || 'N/A' }}</td>
                     <td>{{ project.responsible_user ? project.responsible_user.name : 'N/A' }}</td>
                     <td>
@@ -205,6 +209,9 @@ export default {
                 responsible_user_id: '',
                 status: 'active'
             };
+        },
+        goToTransactions(projectId) {
+            this.$router.push({ name: 'transactions', params: { projectId } });
         }
     }
 };

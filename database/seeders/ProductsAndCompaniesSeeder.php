@@ -36,6 +36,7 @@ class ProductsAndCompaniesSeeder extends Seeder
         // Create Companies for Basic Plan
         $companyA = Company::create([
             'name' => 'Tech Startup Inc',
+            'person_name' => 'Alik',
             'product_id' => $productBasic->id,
             'contact_email' => 'admin@techstartup.com',
             'contact_phone' => '+1-555-0101',
@@ -82,6 +83,7 @@ class ProductsAndCompaniesSeeder extends Seeder
 
         $companyD = Company::create([
             'name' => 'Innovation Labs',
+            'person_name' => 'Alik',
             'product_id' => $productPro->id,
             'contact_email' => 'finance@innovationlabs.com',
             'contact_phone' => '+1-555-0202',
@@ -97,6 +99,7 @@ class ProductsAndCompaniesSeeder extends Seeder
 
         $companyE = Company::create([
             'name' => 'Market Leaders Group',
+            'person_name' => 'Alik',
             'product_id' => $productPro->id,
             'contact_email' => 'payments@marketleaders.com',
             'contact_phone' => '+1-555-0203',
@@ -113,6 +116,7 @@ class ProductsAndCompaniesSeeder extends Seeder
         // Create Companies for Enterprise Plan
         $companyF = Company::create([
             'name' => 'Enterprise Solutions International',
+            'person_name' => 'Alik',
             'product_id' => $productEnterprise->id,
             'contact_email' => 'accounting@esi.com',
             'contact_phone' => '+1-555-0301',
@@ -128,6 +132,7 @@ class ProductsAndCompaniesSeeder extends Seeder
 
         $companyG = Company::create([
             'name' => 'Fortune Enterprises',
+            'person_name' => 'Alik',
             'product_id' => $productEnterprise->id,
             'contact_email' => 'billing@fortune-ent.com',
             'contact_phone' => '+1-555-0302',
