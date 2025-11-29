@@ -11,23 +11,60 @@ class Product extends Model
 
     protected $fillable = [
         'name',
-        'description',
-        'monthly_price',
-        'is_active'
+        'start_date',
+        'responsible_user_id',
+        'status'
     ];
 
     protected $casts = [
-        'monthly_price' => 'decimal:2',
-        'is_active' => 'boolean'
+        'start_date' => 'date',
     ];
 
-    public function companies()
+    /**
+     * Get the responsible user for this product
+     */
+    public function responsibleUser()
     {
-        return $this->hasMany(Company::class);
+        return $this->belongsTo(User::class, 'responsible_user_id');
     }
 
+    /**
+     * Get the contracts for this product
+     */
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    /**
+     * Get the feedbacks for this product
+     */
+    public function feedbacks()
+    {
+        return $this->hasMany(Feedback::class, 'project_id');
+    }
+
+    /**
+     * Scope to filter products for a specific user
+     */
+    public function scopeForUser($query, $userId)
+    {
+        return $query->where('responsible_user_id', $userId);
+    }
+
+    /**
+     * Scope to filter active products
+     */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope to filter suspended products
+     */
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', 'suspended');
     }
 }

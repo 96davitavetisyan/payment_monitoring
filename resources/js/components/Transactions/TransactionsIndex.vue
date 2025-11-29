@@ -1,194 +1,176 @@
 <template>
     <div>
         <app-header></app-header>
-        <div class="container mt-4">
+        <div class="container-fluid mt-4 px-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <button class="btn btn-secondary btn-sm" @click="$router.push('/projects')">
-                        ← Back to Projects
+                    <button class="btn btn-secondary btn-sm" @click="$router.push('/contracts')">
+                        ← Հետ
                     </button>
-                    <h2 class="d-inline ms-3">Transactions - {{ projectName }}</h2>
+                    <h3 class="d-inline ms-3">Հաշիվ-ապրանքագրեր</h3>
                 </div>
-                <button v-if="$auth.can('create_transactions')"
-                        class="btn btn-success"
-                        @click="openCreateModal">
-                    New Transaction
+                <button class="btn btn-success btn-sm" @click="openCreateModal">
+                    + Ավելացնել
                 </button>
             </div>
 
-            <!-- Active Transactions -->
-            <h4 class="mt-4">Active Transactions</h4>
+            <!-- Contract Info -->
+            <div v-if="contract" class="card mb-3">
+                <div class="card-body py-2">
+                    <div class="row small">
+                        <div class="col-md-3">
+                            <strong>Գործընկեր:</strong> {{ contract.partner_company?.name }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Մեր ընկերություն:</strong> {{ contract.own_company?.name }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Ապրանք:</strong> {{ contract.product?.name }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Վճարում:</strong> {{ contract.payment_type }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Table -->
             <div class="table-responsive">
-                <table class="table table-striped table-bordered">
-                    <thead class="table-primary">
+                <table class="table table-sm table-striped table-bordered">
+                    <thead class="table-dark">
                     <tr>
-                        <th>Company</th>
-                        <th>Contact Person</th>
-                        <th>Amount</th>
-                        <th>Payment Status</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                        <th>Contract Period</th>
-                        <th>Actions</th>
+                        <th style="width: 140px;">Հաշիվ #</th>
+                        <th style="width: 100px;">Ամսաթիվ</th>
+                        <th style="width: 110px;">Վերջնաժամկետ</th>
+                        <th style="width: 120px;">Գումար</th>
+                        <th style="width: 90px;">Կարգավիճակ</th>
+                        <th style="width: 100px;">Վճարված</th>
+                        <th style="width: 180px;">Գործողություններ</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="transaction in activeTransactions" :key="transaction.id">
-                        <td>{{ transaction.company_name }}</td>
-                        <td>{{ transaction.person_name || 'N/A' }}</td>
-                        <td>${{ parseFloat(transaction.amount).toFixed(2) }}</td>
+                    <tr v-for="transaction in transactions" :key="transaction.id">
+                        <td class="small">{{ transaction.invoice_number }}</td>
+                        <td class="small">{{ formatDateShort(transaction.invoice_date) }}</td>
+                        <td class="small">{{ formatDateShort(transaction.due_date) }}</td>
+                        <td class="small">{{ formatAmount(transaction.amount) }}</td>
                         <td>
-                            <span class="badge" :class="getStatusClass(transaction.payment_status)">
-                                {{ transaction.payment_status }}
+                            <span class="badge" :class="getStatusClass(transaction.payment_status)" style="font-size: 10px;">
+                                {{ getStatusLabel(transaction.payment_status) }}
                             </span>
                         </td>
+                        <td class="small">{{ formatDateShort(transaction.paid_date) || '-' }}</td>
                         <td>
-                            <span class="badge bg-info">{{ transaction.transaction_type }}</span>
-                        </td>
-                        <td>{{ formatDate(transaction.transaction_date) }}</td>
-                        <td>
-                            {{ formatDate(transaction.contract_start_date) }} -
-                            {{ formatDate(transaction.contract_end_date) }}
-                        </td>
-                        <td>
-                            <button v-if="$auth.can('edit_transactions')"
-                                    class="btn btn-sm btn-primary me-1"
-                                    @click="editTransaction(transaction)">
-                                Edit
-                            </button>
-                            <button v-if="$auth.can('edit_transactions')"
-                                    class="btn btn-sm btn-warning me-1"
-                                    @click="toggleStatus(transaction)">
-                                Archive
-                            </button>
-                            <button v-if="$auth.can('delete_transactions')"
-                                    class="btn btn-sm btn-danger"
-                                    @click="deleteTransaction(transaction.id)">
-                                Delete
-                            </button>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-outline-primary" @click="editTransaction(transaction)" title="Խմբագրել">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-outline-success" @click="uploadFiles(transaction)" title="Ֆայլեր">
+                                    📎
+                                </button>
+                                <button class="btn btn-outline-warning" @click="sendNotification(transaction.id)" title="Ծանուցում">
+                                    ✉️
+                                </button>
+                                <button class="btn btn-outline-danger" @click="deleteTransaction(transaction.id)" title="Ջնջել">
+                                    🗑️
+                                </button>
+                            </div>
                         </td>
                     </tr>
-                    <tr v-if="activeTransactions.length === 0">
-                        <td colspan="8" class="text-center text-muted">No active transactions</td>
+                    <tr v-if="transactions.length === 0">
+                        <td colspan="7" class="text-center">Տվյալներ չկան</td>
                     </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- History Transactions -->
-            <h4 class="mt-5">Transaction History</h4>
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered">
-                    <thead class="table-secondary">
-                    <tr>
-                        <th>Company</th>
-                        <th>Contact Person</th>
-                        <th>Amount</th>
-                        <th>Payment Status</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="transaction in historyTransactions" :key="transaction.id">
-                        <td>{{ transaction.company_name }}</td>
-                        <td>{{ transaction.person_name || 'N/A' }}</td>
-                        <td>${{ parseFloat(transaction.amount).toFixed(2) }}</td>
-                        <td>
-                            <span class="badge" :class="getStatusClass(transaction.payment_status)">
-                                {{ transaction.payment_status }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-secondary">{{ transaction.transaction_type }}</span>
-                        </td>
-                        <td>{{ formatDate(transaction.transaction_date) }}</td>
-                        <td>
-                            <button v-if="$auth.can('edit_transactions')"
-                                    class="btn btn-sm btn-success"
-                                    @click="toggleStatus(transaction)">
-                                Restore
-                            </button>
-                        </td>
-                    </tr>
-                    <tr v-if="historyTransactions.length === 0">
-                        <td colspan="7" class="text-center text-muted">No transaction history</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Transaction Modal -->
-            <div v-if="showModal" class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-                <div class="modal-dialog modal-lg">
+            <!-- Create/Edit Modal -->
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showModal }" style="background: rgba(0,0,0,0.5);" v-if="showModal">
+                <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">{{ isEditing ? 'Edit Transaction' : 'New Transaction' }}</h5>
+                            <h5 class="modal-title">{{ isEditing ? 'Խմբագրել' : 'Ավելացնել' }} Գործարք</h5>
                             <button type="button" class="btn-close" @click="closeModal"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Company Name *</label>
-                                    <input type="text" class="form-control" v-model="currentTransaction.company_name" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Contact Person</label>
-                                    <input type="text" class="form-control" v-model="currentTransaction.person_name">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Amount *</label>
-                                    <input type="number" step="0.01" class="form-control" v-model="currentTransaction.amount" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Payment Status *</label>
-                                    <select class="form-select" v-model="currentTransaction.payment_status" required>
-                                        <option value="paid">Paid</option>
-                                        <option value="unpaid">Unpaid</option>
-                                        <option value="late">Late</option>
-                                        <option value="overdue">Overdue</option>
-                                        <option value="notified">Notified</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Transaction Type *</label>
-                                    <select class="form-select" v-model="currentTransaction.transaction_type" required>
-                                        <option value="one-time">One-time</option>
-                                        <option value="monthly">Monthly</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Transaction Date *</label>
-                                    <input type="date" class="form-control" v-model="currentTransaction.transaction_date" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Max Overdue Date</label>
-                                    <input type="date" class="form-control" v-model="currentTransaction.max_overdue_date">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Contract Start Date</label>
-                                    <input type="date" class="form-control" v-model="currentTransaction.contract_start_date">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Contract End Date</label>
-                                    <input type="date" class="form-control" v-model="currentTransaction.contract_end_date">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Contract File</label>
-                                    <input type="file" class="form-control" @change="handleContractFile" accept=".pdf,.doc,.docx">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Attachment</label>
-                                    <input type="file" class="form-control" @change="handleFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Հաշիվ #</label>
+                                <input type="text" class="form-control" v-model="currentTransaction.invoice_number" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ամսաթիվ</label>
+                                <input type="date" class="form-control" v-model="currentTransaction.invoice_date" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Վերջնաժամկետ</label>
+                                <input type="date" class="form-control" v-model="currentTransaction.due_date" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Գումար</label>
+                                <input type="number" step="0.01" class="form-control" v-model="currentTransaction.amount" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Կարգավիճակ</label>
+                                <select class="form-select" v-model="currentTransaction.payment_status" required>
+                                    <option value="pending">Pending</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="late">Late</option>
+                                    <option value="overdue">Overdue</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Վճարման ամսաթիվ</label>
+                                <input type="date" class="form-control" v-model="currentTransaction.paid_date">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Նշումներ</label>
+                                <textarea class="form-control" rows="2" v-model="currentTransaction.notes"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-secondary" @click="closeModal">Cancel</button>
-                            <button class="btn btn-primary" @click="saveTransaction">
-                                {{ isEditing ? 'Update' : 'Create' }}
-                            </button>
+                            <button class="btn btn-secondary" @click="closeModal">Չեղարկել</button>
+                            <button class="btn btn-success" @click="saveTransaction">{{ isEditing ? 'Թարմացնել' : 'Ստեղծել' }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload Modal -->
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showFileModal }" style="background: rgba(0,0,0,0.5);" v-if="showFileModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Վերբեռնել ֆայլեր</h5>
+                            <button type="button" class="btn-close" @click="closeFileModal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Ընտրել ֆայլեր</label>
+                                <input type="file" class="form-control" @change="handleFileSelection" multiple ref="fileInput">
+                                <small class="text-muted">Կարող եք ընտրել մի քանի ֆայլ</small>
+                            </div>
+
+                            <!-- Existing Files -->
+                            <div v-if="currentTransactionFiles.length > 0">
+                                <h6>Առկա ֆայլեր:</h6>
+                                <ul class="list-group list-group-sm">
+                                    <li v-for="file in currentTransactionFiles" :key="file.id" class="list-group-item d-flex justify-content-between align-items-center py-1">
+                                        <small>{{ file.file_name }}</small>
+                                        <button class="btn btn-sm btn-danger" @click="deleteFile(file.id)">Ջնջել</button>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" @click="closeFileModal">Փակել</button>
+                            <button class="btn btn-success" @click="submitFiles">Վերբեռնել</button>
                         </div>
                     </div>
                 </div>
@@ -198,164 +180,231 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
     data() {
         return {
-            projectId: null,
-            projectName: '',
-            activeTransactions: [],
-            historyTransactions: [],
+            contractId: null,
+            contract: null,
+            transactions: [],
             showModal: false,
+            showFileModal: false,
             isEditing: false,
-            currentTransaction: this.getEmptyTransaction(),
-            contractFile: null,
-            attachmentFile: null
+            selectedFiles: [],
+            currentTransactionForFiles: null,
+            currentTransactionFiles: [],
+            currentTransaction: {
+                contract_id: '',
+                invoice_number: '',
+                invoice_date: '',
+                due_date: '',
+                amount: '',
+                payment_status: 'pending',
+                paid_date: '',
+                notes: ''
+            }
         };
     },
     mounted() {
-        this.projectId = this.$route.params.projectId;
-        this.fetchProject();
-        this.fetchTransactions();
+        this.contractId = this.$route.params.contractId;
+        if (this.contractId) {
+            this.fetchContract();
+            this.fetchTransactions();
+        }
     },
     methods: {
-        getEmptyTransaction() {
-            return {
-                company_name: '',
-                person_name: '',
-                amount: '',
-                payment_status: 'unpaid',
-                transaction_type: 'one-time',
-                transaction_date: '',
-                max_overdue_date: '',
-                contract_start_date: '',
-                contract_end_date: '',
-                is_active: true
-            };
+        async fetchContract() {
+            try {
+                const response = await axios.get(`/api/contracts/${this.contractId}`);
+                this.contract = response.data.data;
+            } catch (error) {
+                console.error('Error fetching contract:', error);
+                alert('Failed to load contract');
+            }
         },
-        fetchProject() {
-            axios.get(`/api/projects/${this.projectId}`)
-                .then(res => {
-                    const project = res.data.success ? res.data.data : res.data;
-                    this.projectName = project.name;
-                })
-                .catch(err => console.error('Error fetching project:', err));
-        },
-        fetchTransactions() {
-            axios.get(`/api/projects/${this.projectId}/transactions`)
-                .then(res => {
-                    this.activeTransactions = res.data.active || [];
-                    this.historyTransactions = res.data.history || [];
-                })
-                .catch(err => {
-                    console.error('Error fetching transactions:', err);
-                    alert('Error: ' + (err.response?.data?.message || 'Unknown error'));
+        async fetchTransactions() {
+            try {
+                const response = await axios.get('/api/transactions', {
+                    params: { contract_id: this.contractId }
                 });
+                this.transactions = response.data.data;
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+                alert('Failed to load transactions');
+            }
         },
         openCreateModal() {
+            this.currentTransaction = {
+                contract_id: this.contractId,
+                invoice_number: '',
+                invoice_date: '',
+                due_date: '',
+                amount: '',
+                payment_status: 'pending',
+                paid_date: '',
+                notes: ''
+            };
             this.isEditing = false;
-            this.currentTransaction = this.getEmptyTransaction();
-            this.contractFile = null;
-            this.attachmentFile = null;
             this.showModal = true;
         },
         editTransaction(transaction) {
-            this.isEditing = true;
             this.currentTransaction = { ...transaction };
-            this.contractFile = null;
-            this.attachmentFile = null;
+            this.isEditing = true;
             this.showModal = true;
+        },
+        async saveTransaction() {
+            try {
+                if (this.isEditing) {
+                    await axios.put(`/api/transactions/${this.currentTransaction.id}`, this.currentTransaction);
+                } else {
+                    await axios.post('/api/transactions', this.currentTransaction);
+                }
+                this.fetchTransactions();
+                this.closeModal();
+                alert(this.isEditing ? 'Transaction updated successfully' : 'Transaction created successfully');
+            } catch (error) {
+                console.error('Error saving transaction:', error);
+                alert('Failed to save transaction: ' + (error.response?.data?.message || error.message));
+            }
+        },
+        async deleteTransaction(id) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                try {
+                    await axios.delete(`/api/transactions/${id}`);
+                    this.fetchTransactions();
+                    alert('Transaction deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting transaction:', error);
+                    alert('Failed to delete transaction');
+                }
+            }
+        },
+        async uploadFiles(transaction) {
+            this.currentTransactionForFiles = transaction;
+            this.showFileModal = true;
+            try {
+                const response = await axios.get(`/api/transactions/${transaction.id}`);
+                this.currentTransactionFiles = response.data.data.files || [];
+            } catch (error) {
+                console.error('Error fetching transaction files:', error);
+            }
+        },
+        handleFileSelection(event) {
+            this.selectedFiles = Array.from(event.target.files);
+        },
+        async submitFiles() {
+            if (this.selectedFiles.length === 0) {
+                alert('Please select at least one file');
+                return;
+            }
+
+            const formData = new FormData();
+            this.selectedFiles.forEach(file => {
+                formData.append('files[]', file);
+            });
+
+            try {
+                await axios.post(`/api/transactions/${this.currentTransactionForFiles.id}/upload-files`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                alert('Files uploaded successfully');
+                this.closeFileModal();
+            } catch (error) {
+                console.error('Error uploading files:', error);
+                alert('Failed to upload files: ' + (error.response?.data?.message || error.message));
+            }
+        },
+        async deleteFile(fileId) {
+            if (confirm('Are you sure you want to delete this file?')) {
+                try {
+                    await axios.delete(`/api/transactions/${this.currentTransactionForFiles.id}/files/${fileId}`);
+                    const response = await axios.get(`/api/transactions/${this.currentTransactionForFiles.id}`);
+                    this.currentTransactionFiles = response.data.data.files || [];
+                    alert('File deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting file:', error);
+                    alert('Failed to delete file');
+                }
+            }
+        },
+        async sendNotification(transactionId) {
+            if (confirm('Send payment reminder email?')) {
+                try {
+                    await axios.post(`/api/transactions/${transactionId}/send-notification`);
+                    this.fetchTransactions();
+                    alert('Notification sent successfully');
+                } catch (error) {
+                    console.error('Error sending notification:', error);
+                    alert('Failed to send notification: ' + (error.response?.data?.message || error.message));
+                }
+            }
         },
         closeModal() {
             this.showModal = false;
             this.isEditing = false;
-            this.currentTransaction = this.getEmptyTransaction();
-            this.contractFile = null;
-            this.attachmentFile = null;
+            this.currentTransaction = {
+                contract_id: this.contractId,
+                invoice_number: '',
+                invoice_date: '',
+                due_date: '',
+                amount: '',
+                payment_status: 'pending',
+                paid_date: '',
+                notes: ''
+            };
         },
-        handleContractFile(event) {
-            this.contractFile = event.target.files[0];
-        },
-        handleFile(event) {
-            this.attachmentFile = event.target.files[0];
-        },
-        saveTransaction() {
-            console.log(4485484)
-            const formData = new FormData();
-
-            Object.keys(this.currentTransaction).forEach(key => {
-                let value = this.currentTransaction[key];
-
-                if (value !== null && value !== '') {
-                    if (key === 'is_active') {
-                        value = (value === true || value === 'true') ? 1 : 0;
-                    }
-
-                    if (key.includes('date') && typeof value === 'string' && value.includes('T')) {
-                        value = value.split('T')[0];
-                    }
-
-                    formData.append(key, value);
-                }
-            })
-            if (this.contractFile) formData.append('contract_file', this.contractFile);
-            if (this.attachmentFile) formData.append('file', this.attachmentFile);
-
-            // formData.forEach((value, key) => {
-            //     if (key === 'company') {
-            //         formData.delete(key);
-            //     }
-            // });
-            if(this.isEditing){
-                formData.append('_method', 'PUT');
-            }
-
-            formData.forEach((value, key) => {
-                console.log(key, value);
-
-            });
-            const url = this.isEditing
-                ? `/api/projects/${this.projectId}/transactions/${this.currentTransaction.id}`
-                : `/api/projects/${this.projectId}/transactions`;
-
-            axios['post'](url, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            })
-                .then(() => {
-                    this.fetchTransactions();
-                    this.closeModal();
-                })
-                .catch(err => {
-                    alert('Error: ' + (err.response?.data?.message || 'Unknown error'));
-                });
-        },
-        toggleStatus(transaction) {
-            axios.post(`/api/projects/${this.projectId}/transactions/${transaction.id}/toggle-status`)
-                .then(() => this.fetchTransactions())
-                .catch(err => alert('Error: ' + (err.response?.data?.message || 'Unknown error')));
-        },
-        deleteTransaction(id) {
-            if (confirm('Are you sure you want to delete this transaction?')) {
-                axios.delete(`/api/projects/${this.projectId}/transactions/${id}`)
-                    .then(() => this.fetchTransactions())
-                    .catch(err => alert('Error: ' + (err.response?.data?.message || 'Unknown error')));
+        closeFileModal() {
+            this.showFileModal = false;
+            this.selectedFiles = [];
+            this.currentTransactionForFiles = null;
+            this.currentTransactionFiles = [];
+            if (this.$refs.fileInput) {
+                this.$refs.fileInput.value = '';
             }
         },
-        formatDate(date) {
-            if (!date) return 'N/A';
-            return new Date(date).toLocaleDateString();
+        formatAmount(amount) {
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount) + ' ֏';
+        },
+        formatDateShort(date) {
+            if (!date) return null;
+            const d = new Date(date);
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${month}/${day}/${d.getFullYear()}`;
         },
         getStatusClass(status) {
             const classes = {
+                'pending': 'bg-warning text-dark',
                 'paid': 'bg-success',
-                'unpaid': 'bg-warning',
                 'late': 'bg-danger',
                 'overdue': 'bg-danger',
-                'notified': 'bg-info'
+                'cancelled': 'bg-secondary'
             };
             return classes[status] || 'bg-secondary';
+        },
+        getStatusLabel(status) {
+            const labels = {
+                'pending': 'Pending',
+                'paid': 'Paid',
+                'late': 'Late',
+                'overdue': 'Overdue',
+                'cancelled': 'Cancel'
+            };
+            return labels[status] || status;
         }
     }
 };
 </script>
+
+<style scoped>
+.table-sm th, .table-sm td {
+    padding: 0.4rem;
+    font-size: 0.875rem;
+}
+.btn-group-sm > .btn {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+}
+</style>

@@ -10,48 +10,62 @@ class Transaction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'project_id',
-        'company_id',
-        'company_name',
-        'person_name',
-        'transaction_date',
-        'max_overdue_date',
+        'contract_id',
+        'invoice_number',
+        'invoice_date',
+        'due_date',
         'amount',
         'payment_status',
-        'transaction_type',
-        'contract_start_date',
-        'contract_end_date',
-        'contract_file',
-        'is_active',
-        'file_path'
+        'paid_date',
+        'notes',
+        'notified_at',
     ];
 
     protected $casts = [
-        'transaction_date' => 'date',
-        'max_overdue_date' => 'date',
-        'contract_start_date' => 'date',
-        'contract_end_date' => 'date',
-        'is_active' => 'boolean',
-        'amount' => 'decimal:2'
+        'invoice_date' => 'date',
+        'due_date' => 'date',
+        'paid_date' => 'date',
+        'notified_at' => 'datetime',
+        'amount' => 'decimal:2',
     ];
 
-    public function project()
+    /**
+     * Get the contract for this transaction
+     */
+    public function contract()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Contract::class);
     }
 
-    public function company()
+    /**
+     * Get the files for this transaction
+     */
+    public function files()
     {
-        return $this->belongsTo(Company::class);
+        return $this->hasMany(TransactionFile::class);
     }
 
-    public function scopeActive($query)
+    /**
+     * Scope for pending payments
+     */
+    public function scopePending($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('payment_status', 'pending');
     }
 
-    public function scopeHistory($query)
+    /**
+     * Scope for overdue payments
+     */
+    public function scopeOverdue($query)
     {
-        return $query->where('is_active', false);
+        return $query->whereIn('payment_status', ['late', 'overdue']);
+    }
+
+    /**
+     * Scope for paid invoices
+     */
+    public function scopePaid($query)
+    {
+        return $query->where('payment_status', 'paid');
     }
 }

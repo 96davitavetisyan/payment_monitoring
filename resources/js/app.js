@@ -19,6 +19,9 @@ import TransactionsIndex from './components/Transactions/TransactionsIndex.vue';
 import FeedbackIndex from './components/Feedbacks/FeedbackIndex.vue';
 import ProductsIndex from './components/Products/ProductsIndex.vue';
 import CompaniesIndex from './components/Companies/CompaniesIndex.vue';
+import PartnerCompaniesIndex from './components/PartnerCompanies/PartnerCompaniesIndex.vue';
+import OwnCompaniesIndex from './components/OwnCompanies/OwnCompaniesIndex.vue';
+import ContractsIndex from './components/Contracts/ContractsIndex.vue';
 import Login from './components/Auth/Login.vue';
 
 // Routes configuration
@@ -54,6 +57,30 @@ const routes = [
         component: CompaniesIndex,
         meta: { requiresAuth: true },
         name: 'companies'
+    },
+    {
+        path: '/partner-companies',
+        component: PartnerCompaniesIndex,
+        meta: { requiresAuth: true },
+        name: 'partner-companies'
+    },
+    {
+        path: '/own-companies',
+        component: OwnCompaniesIndex,
+        meta: { requiresAuth: true },
+        name: 'own-companies'
+    },
+    {
+        path: '/contracts',
+        component: ContractsIndex,
+        meta: { requiresAuth: true },
+        name: 'contracts'
+    },
+    {
+        path: '/contracts/:contractId/transactions',
+        component: TransactionsIndex,
+        meta: { requiresAuth: true },
+        name: 'contract-transactions'
     }
 ];
 

@@ -3,16 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     /**
-     * Get all products
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        $products = Product::with('companies')->get();
+        // Get all products
+        $products = Product::all();
 
         return response()->json([
             'success' => true,
@@ -21,90 +26,100 @@ class ProductController extends Controller
     }
 
     /**
-     * Get companies using a specific product
+     * Store a newly created resource in storage.
+     *
+     * @param  \App\Http\Requests\StoreProductRequest  $request
+     * @return \Illuminate\Http\Response
      */
-    public function companies(Product $product)
+    public function store(StoreProductRequest $request)
     {
-        $companies = $product->companies()
-            ->with(['activeSubscription'])
-            ->get()
-            ->map(function ($company) {
-                $subscription = $company->activeSubscription;
-                return [
-                    'id' => $company->id,
-                    'name' => $company->name,
-                    'contact_email' => $company->contact_email,
-                    'contact_phone' => $company->contact_phone,
-                    'is_active' => $company->is_active,
-                    'subscription' => $subscription ? [
-                        'starts_from' => $subscription->starts_from,
-                        'price_per_month' => $subscription->price_per_month,
-                        'status' => $subscription->status
-                    ] : null,
-                    'created_at' => $company->created_at
-                ];
-            });
-
-        return response()->json([
-            'success' => true,
-            'product' => $product,
-            'companies' => $companies,
-            'total_companies' => $companies->count()
-        ]);
-    }
-
-    /**
-     * Create a new product
-     */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'monthly_price' => 'required|numeric|min:0',
-            'is_active' => 'boolean'
-        ]);
-
-        $product = Product::create($data);
+        $product = Product::create($request->validated());
 
         return response()->json([
             'success' => true,
             'message' => 'Product created',
-            'data' => $product
+            'data' => $product->load('responsibleUser')
         ], 201);
     }
 
     /**
-     * Update a product
+     * Display the specified resource.
+     *
+     * @param  Product  $product
+     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product)
+    public function show(Product $product)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'monthly_price' => 'required|numeric|min:0',
-            'is_active' => 'boolean'
-        ]);
-
-        $product->update($data);
+        // Check if user can view this product
+        if (!auth()->user()->can('view_all_products') && $product->responsible_user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Product updated',
-            'data' => $product
+            'data' => $product->load('responsibleUser')
         ]);
     }
 
     /**
-     * Delete a product
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\UpdateProductRequest  $request
+     * @param  Product  $product
+     * @return \Illuminate\Http\Response
+     */
+    public function update(UpdateProductRequest $request, Product $product)
+    {
+        $product->update($request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product updated',
+            'data' => $product->fresh()->load('responsibleUser')
+        ]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  Product  $product
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Product $product)
     {
+        // Check permission
+        if (!auth()->user()->can('delete_products')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $product->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Product deleted'
+        ]);
+    }
+
+    /**
+     * Toggle product status (activate/suspend)
+     *
+     * @param  Product  $product
+     * @return \Illuminate\Http\Response
+     */
+    public function toggleStatus(Product $product)
+    {
+        // Check if user can suspend/activate products
+        if (!auth()->user()->can('suspend_products') && !auth()->user()->can('activate_products')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $product->status = $product->status === 'active' ? 'suspended' : 'active';
+        $product->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product status updated',
+            'status' => $product->status
         ]);
     }
 }

@@ -3,14 +3,17 @@
         <div class="container-fluid">
             <span class="navbar-brand">Payment Monitoring</span>
             <div class="navbar-nav me-auto">
-                <router-link to="/projects" class="nav-link text-white" active-class="fw-bold">
-                    Projects
-                </router-link>
-                <router-link to="/companies" class="nav-link text-white" active-class="fw-bold">
-                    Companies
-                </router-link>
                 <router-link to="/products" class="nav-link text-white" active-class="fw-bold">
-                    Products
+                    Ապրանքներ (Products)
+                </router-link>
+                <router-link to="/partner-companies" class="nav-link text-white" active-class="fw-bold">
+                    Գործընկերներ (Partners)
+                </router-link>
+                <router-link to="/own-companies" class="nav-link text-white" active-class="fw-bold">
+                    Մեր ընկերությունները (Our Companies)
+                </router-link>
+                <router-link to="/contracts" class="nav-link text-white" active-class="fw-bold">
+                    Պայմանագրեր (Contracts)
                 </router-link>
             </div>
             <div class="d-flex align-items-center">
