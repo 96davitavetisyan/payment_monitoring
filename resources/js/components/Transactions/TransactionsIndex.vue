@@ -28,7 +28,7 @@
                             <strong>Ապրանք:</strong> {{ contract.product?.name }}
                         </div>
                         <div class="col-md-3">
-                            <strong>Վճարում:</strong> {{ contract.payment_type }}
+                            <strong>Վճարում:</strong> {{ contract.payment_type === 'monthly' ? 'Ամենամյա' : ('one_time' ? 'Միանվագ' : 'Տարեկան') }}
                         </div>
                     </div>
                 </div>
@@ -39,12 +39,13 @@
                 <table class="table table-sm table-striped table-bordered">
                     <thead class="table-dark">
                     <tr>
-                        <th style="width: 140px;">Հաշիվ #</th>
-                        <th style="width: 100px;">Ամսաթիվ</th>
+                        <th style="width: 140px;">Հաշվեհամար</th>
+                        <th style="width: 100px;">Վճարման ամսաթիվ</th>
                         <th style="width: 110px;">Վերջնաժամկետ</th>
                         <th style="width: 120px;">Գումար</th>
                         <th style="width: 90px;">Կարգավիճակ</th>
-                        <th style="width: 100px;">Վճարված</th>
+                        <th style="width: 100px;">Երբ է վճարվել</th>
+                        <th style="width: 100px;">Ֆայլեր</th>
                         <th style="width: 180px;">Գործողություններ</th>
                     </tr>
                     </thead>
@@ -61,18 +62,35 @@
                         </td>
                         <td class="small">{{ formatDateShort(transaction.paid_date) || '-' }}</td>
                         <td>
-                            <div class="btn-group btn-group-sm" role="group">
+                            <div v-if="transaction.files.length">
+                                <button v-for="file in transaction.files" :key="file.id"
+                                        class="btn btn-outline-success btn-sm mb-1"
+                                        @click="downloadFile(file.id)">
+                                    <i class="fa-solid fa-paperclip"></i> {{ file.file_name }}
+                                </button>
+                            </div>
+                            <span v-else>-</span>
+                        </td>
+                        <td>
+                            <div class="" role="group">
                                 <button class="btn btn-outline-primary" @click="editTransaction(transaction)" title="Խմբագրել">
-                                    ✏️
+                                    <i class="fa-solid fa-pen"></i>
                                 </button>
+
                                 <button class="btn btn-outline-success" @click="uploadFiles(transaction)" title="Ֆայլեր">
-                                    📎
+                                    <i class="fa-solid fa-paperclip"></i>
                                 </button>
+
                                 <button class="btn btn-outline-warning" @click="sendNotification(transaction.id)" title="Ծանուցում">
-                                    ✉️
+                                    <i class="fa-solid fa-envelope"></i>
                                 </button>
+
                                 <button class="btn btn-outline-danger" @click="deleteTransaction(transaction.id)" title="Ջնջել">
-                                    🗑️
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+
+                                <button class="btn btn-outline-info" @click="openPaidFileModal(transaction)" title="Վճարման ամսաթիվ և ֆայլ">
+                                    <i class="fa-solid fa-calendar-plus"></i>
                                 </button>
                             </div>
                         </td>
@@ -95,18 +113,10 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label">Հաշիվ #</label>
-                                <input type="text" class="form-control" v-model="currentTransaction.invoice_number" required>
+                                <input type="text" class="form-control" v-model="invoiceNumber" required>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Ամսաթիվ</label>
-                                <input type="date" class="form-control" v-model="currentTransaction.invoice_date" required>
-                            </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Վերջնաժամկետ</label>
-                                <input type="date" class="form-control" v-model="currentTransaction.due_date" required>
-                            </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Գումար</label>
@@ -116,16 +126,24 @@
                             <div class="mb-3">
                                 <label class="form-label">Կարգավիճակ</label>
                                 <select class="form-select" v-model="currentTransaction.payment_status" required>
-                                    <option value="pending">Pending</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="late">Late</option>
-                                    <option value="overdue">Overdue</option>
-                                    <option value="cancelled">Cancelled</option>
+                                    <option value="pending">Սպասող</option>
+                                    <option value="paid">Վճարված</option>
+                                    <option value="late">Ուշացած</option>
+                                    <option value="overdue">Ժամկետանց</option>
+                                    <option value="cancelled">Չեղարկված է</option>
                                 </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Վճարման ամսաթիվ</label>
+                                <input type="date" class="form-control" v-model="invoiceDate" required>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Վճարման ամսաթիվ</label>
+                                <label class="form-label">Վերջնաժամկետ</label>
+                                <input type="date" class="form-control" v-model="invoiceFinishDate" required>
+                            </div>
+                            <div class="mb-3" v-if = "isEditing">
+                                <label class="form-label">Երբ է վճարվել</label>
                                 <input type="date" class="form-control" v-model="currentTransaction.paid_date">
                             </div>
 
@@ -175,11 +193,37 @@
                     </div>
                 </div>
             </div>
+
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showPaidFileModal }" style="background: rgba(0,0,0,0.5);" v-if="showPaidFileModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Վճարման ամսաթիվ և ֆայլ</h5>
+                            <button type="button" class="btn-close" @click="closePaidFileModal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Երբ է վճարվել</label>
+                                <input type="date" class="form-control" v-model="paidFileTransaction.paid_date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ընտրել ֆայլ</label>
+                                <input type="file" class="form-control" @change="handlePaidFileSelection" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" @click="closePaidFileModal">Չեղարկել</button>
+                            <button class="btn btn-success" @click="savePaidFileTransaction">Պահպանել</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+import Swal from 'sweetalert2';
 export default {
     data() {
         return {
@@ -201,7 +245,11 @@ export default {
                 payment_status: 'pending',
                 paid_date: '',
                 notes: ''
-            }
+            },
+
+            showPaidFileModal: false,
+            paidFileTransaction: null,
+            selectedPaidFile: null,
         };
     },
     mounted() {
@@ -211,7 +259,69 @@ export default {
             this.fetchTransactions();
         }
     },
+    computed: {
+        invoiceNumber: {
+            get() {
+                return this.currentTransaction?.invoice_number !== '' ?this.currentTransaction?.invoice_number:  this.contract.account_number;
+            },
+            set(value) {
+                if (this.currentTransaction) {
+                    this.currentTransaction.invoice_number = value;
+                } else {
+                    this.contract.invoice_number = value;
+                }
+            }
+        },
+        invoiceDate: {
+            get() {
+                return this.currentTransaction?.invoice_date !== '' ? this.currentTransaction?.invoice_date:  this.formatPaymentDate(this.contract.payment_date);
+            },
+            set(value) {
+
+                if (this.currentTransaction) {
+                    this.currentTransaction.invoice_date = value;
+                } else {
+                    this.contract.payment_date = value;
+                }
+            }
+        },
+        invoiceFinishDate: {
+            get() {
+                return this.currentTransaction?.due_date !== '' ? this.currentTransaction?.due_date:  this.formatPaymentDate(this.contract.payment_finish_date);
+            },
+            set(value) {
+
+                if (this.currentTransaction) {
+                    this.currentTransaction.due_date = value;
+                } else {
+                    this.contract.payment_finish_date = value;
+                }
+            }
+        }
+    },
     methods: {
+        formatPaymentDate(day) {
+            if(day){
+                const today = new Date();
+
+                const year = today.getFullYear();
+                const month = today.getMonth();
+
+                let date = new Date(year, month, day);
+
+                if (date < today) {
+                    date = new Date(year, month + 1, day);
+                }
+
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+
+                return `${dd}-${mm}-${yyyy}`;
+            }
+
+            return `-`;
+        },
         async fetchContract() {
             try {
                 const response = await axios.get(`/api/contracts/${this.contractId}`);
@@ -258,23 +368,50 @@ export default {
                 } else {
                     await axios.post('/api/transactions', this.currentTransaction);
                 }
+
                 this.fetchTransactions();
                 this.closeModal();
-                alert(this.isEditing ? 'Transaction updated successfully' : 'Transaction created successfully');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: this.isEditing ? 'Գործարքը թարմացվեց' : 'Գործարքը ստեղծվեց',
+                    showConfirmButton: true
+                });
             } catch (error) {
                 console.error('Error saving transaction:', error);
-                alert('Failed to save transaction: ' + (error.response?.data?.message || error.message));
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Խնդիր է առաջացել',
+                    text: error.response?.data?.message || error.message
+                });
             }
         },
         async deleteTransaction(id) {
-            if (confirm('Are you sure you want to delete this transaction?')) {
+            const result = await Swal.fire({
+                title: 'Հաստատե՞լ ջնջումը',
+                text: 'Ցանկանում եք ջնջել այս գործարքը։',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ջնջել',
+                cancelButtonText: 'Չեղարկել'
+            });
+
+            if (result.isConfirmed) {
                 try {
                     await axios.delete(`/api/transactions/${id}`);
                     this.fetchTransactions();
-                    alert('Transaction deleted successfully');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ջնջված է',
+                        text: 'Գործարքը հաջողությամբ ջնջվել է',
+                    });
                 } catch (error) {
                     console.error('Error deleting transaction:', error);
-                    alert('Failed to delete transaction');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Խնդիր է առաջացել',
+                        text: 'Գործարքը ջնջել չի հաջողվել',
+                    });
                 }
             }
         },
@@ -293,7 +430,11 @@ export default {
         },
         async submitFiles() {
             if (this.selectedFiles.length === 0) {
-                alert('Please select at least one file');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Ուշադրություն',
+                    text: 'Խնդրում ենք ընտրել առնվազն մեկ ֆայլ',
+                });
                 return;
             }
 
@@ -306,35 +447,99 @@ export default {
                 await axios.post(`/api/transactions/${this.currentTransactionForFiles.id}/upload-files`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
-                alert('Files uploaded successfully');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Ֆայլերը հաջողությամբ վերբեռնվել են',
+                    showConfirmButton: true,
+                });
+
                 this.closeFileModal();
             } catch (error) {
                 console.error('Error uploading files:', error);
-                alert('Failed to upload files: ' + (error.response?.data?.message || error.message));
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Խնդիր է առաջացել',
+                    text: error.response?.data?.message || error.message,
+                });
             }
         },
         async deleteFile(fileId) {
-            if (confirm('Are you sure you want to delete this file?')) {
+            const result = await Swal.fire({
+                title: 'Ջնջել ֆայլը՞',
+                text: "Դուք չեք կարող վերադարձնել ֆայլը հետագայում:",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ջնջել',
+                cancelButtonText: 'Չեղարկել'
+            });
+
+            if (result.isConfirmed) {
                 try {
                     await axios.delete(`/api/transactions/${this.currentTransactionForFiles.id}/files/${fileId}`);
+
                     const response = await axios.get(`/api/transactions/${this.currentTransactionForFiles.id}`);
                     this.currentTransactionFiles = response.data.data.files || [];
-                    alert('File deleted successfully');
+
+                    Swal.fire(
+                        'Ջնջված է!',
+                        'Ֆայլը հաջողությամբ ջնջվեց',
+                        'success'
+                    );
                 } catch (error) {
                     console.error('Error deleting file:', error);
-                    alert('Failed to delete file');
+                    Swal.fire(
+                        'Խնդիր է առաջացել',
+                        'Ֆայլը չհաջողվեց ջնջել: ' + (error.response?.data?.message || error.message),
+                        'error'
+                    );
                 }
             }
         },
         async sendNotification(transactionId) {
-            if (confirm('Send payment reminder email?')) {
+            const { value: file } = await Swal.fire({
+                title: 'Ուղարկել ծանուցումը՞',
+                text: "Ընտրեք ֆայլը, որը կուղարկվի:",
+                input: 'file',
+                inputAttributes: {
+                    'accept': '.pdf,.doc,.docx',
+                    'aria-label': 'Attach file'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Ուղարկել',
+                cancelButtonText: 'Չեղարկել',
+                inputValidator: (file) => {
+                    if (!file) {
+                        return 'Դուք պետք է ընտրեք ֆայլ';
+                    }
+                }
+            });
+
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
                 try {
-                    await axios.post(`/api/transactions/${transactionId}/send-notification`);
+                    await axios.post(`/api/transactions/${transactionId}/send-notification`, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+
                     this.fetchTransactions();
-                    alert('Notification sent successfully');
+
+                    Swal.fire(
+                        'Ուղարկված է!',
+                        'Ծանուցումը հաջողությամբ ուղարկվեց',
+                        'success'
+                    );
                 } catch (error) {
                     console.error('Error sending notification:', error);
-                    alert('Failed to send notification: ' + (error.response?.data?.message || error.message));
+                    Swal.fire(
+                        'Խնդիր է առաջացել',
+                        error.response?.data?.message || error.message,
+                        'error'
+                    );
                 }
             }
         },
@@ -372,7 +577,7 @@ export default {
             const d = new Date(date);
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
-            return `${month}/${day}/${d.getFullYear()}`;
+            return `${day}-${month}-${d.getFullYear()}`;
         },
         getStatusClass(status) {
             const classes = {
@@ -386,13 +591,65 @@ export default {
         },
         getStatusLabel(status) {
             const labels = {
-                'pending': 'Pending',
-                'paid': 'Paid',
-                'late': 'Late',
-                'overdue': 'Overdue',
-                'cancelled': 'Cancel'
+                'pending': 'Սպասող',
+                'paid': 'Վճարված',
+                'late': 'Ուշացած',
+                'overdue': 'Ժամկետանց',
+                'cancelled': 'Չեղարկված է'
             };
             return labels[status] || status;
+        },
+        openPaidFileModal(transaction) {
+            this.paidFileTransaction = { ...transaction }; // копия транзакции
+            this.selectedPaidFile = null;
+            this.showPaidFileModal = true;
+        },
+        closePaidFileModal() {
+            this.showPaidFileModal = false;
+            this.paidFileTransaction = null;
+            this.selectedPaidFile = null;
+        },
+        handlePaidFileSelection(event) {
+            this.selectedPaidFile = event.target.files[0];
+        },
+        async savePaidFileTransaction() {
+            if (!this.paidFileTransaction.paid_date || !this.selectedPaidFile) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Ուշադրություն',
+                    text: 'Ընտրեք ամսաթիվ և ֆայլ',
+                });
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('paid_date', this.paidFileTransaction.paid_date);
+            formData.append('file', this.selectedPaidFile);
+
+            try {
+                await axios.post(`/api/transactions/${this.paidFileTransaction.id}/paid-file`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Պահպանվել է',
+                    text: 'Վճարման ամսաթիվը և ֆայլը հաջողությամբ պահպանվել են',
+                });
+
+                this.fetchTransactions(); // обновляем таблицу
+                this.closePaidFileModal();
+            } catch (error) {
+                console.error('Error saving paid file transaction:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Խնդիր է առաջացել',
+                    text: error.response?.data?.message || error.message,
+                });
+            }
+        },
+        downloadFile(fileId) {
+            window.open(`/api/transaction-files/download/${fileId}`, '_blank');
         }
     }
 };

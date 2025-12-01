@@ -13,7 +13,7 @@ class StorePartnerCompanyRequest extends FormRequest
      */
     public function authorize()
     {
-        return $this->user()->can('create_partner_companies');
+//        return $this->user()->can('create_partner_companies');
     }
 
     /**
@@ -25,7 +25,9 @@ class StorePartnerCompanyRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
+            'tax_id' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
+            'contact_person_position' => 'nullable|string|max:255',
             'contact_email' => 'nullable|email|max:255',
             'contact_phone' => 'nullable|string|max:255',
             'is_active' => 'boolean',

@@ -1,19 +1,19 @@
 <template>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <span class="navbar-brand">Payment Monitoring</span>
+            <span class="navbar-brand">Վճարումների մոնիթորինգ</span>
             <div class="navbar-nav me-auto">
                 <router-link to="/products" class="nav-link text-white" active-class="fw-bold">
-                    Ապրանքներ (Products)
+                    Ապրանքներ
                 </router-link>
                 <router-link to="/partner-companies" class="nav-link text-white" active-class="fw-bold">
-                    Գործընկերներ (Partners)
+                    Գործընկերներ
                 </router-link>
                 <router-link to="/own-companies" class="nav-link text-white" active-class="fw-bold">
-                    Մեր ընկերությունները (Our Companies)
+                    Մեր ընկերությունները
                 </router-link>
                 <router-link to="/contracts" class="nav-link text-white" active-class="fw-bold">
-                    Պայմանագրեր (Contracts)
+                    Պայմանագրեր
                 </router-link>
             </div>
             <div class="d-flex align-items-center">
@@ -23,7 +23,7 @@
                         {{ user.roles[0] }}
                     </span>
                 </span>
-                <button class="btn btn-outline-light btn-sm" @click="logout">Logout</button>
+                <button class="btn btn-outline-light btn-sm" @click="logout">Ելք</button>
             </div>
         </div>
     </nav>

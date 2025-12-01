@@ -17,7 +17,7 @@ class ProductController extends Controller
     public function index()
     {
         // Get all products
-        $products = Product::all();
+        $products = Product::with('responsibleUser')->get();
 
         return response()->json([
             'success' => true,

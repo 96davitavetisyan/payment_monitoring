@@ -17,7 +17,7 @@ class ContractController extends Controller
         $contracts = Contract::with(['partnerCompany', 'ownCompany', 'product'])
             ->orderBy('created_at', 'desc')
             ->get();
-        
+
         return response()->json([
             'success' => true,
             'data' => $contracts
@@ -28,16 +28,16 @@ class ContractController extends Controller
     {
         try {
             $data = $request->validated();
-            
+
             // Handle contract file upload
             if ($request->hasFile('contract_file')) {
                 $data['contract_file'] = $request->file('contract_file')->store('contracts');
             }
-            
+
             $contract = Contract::create($data);
-            
+
             $this->logActivity('create', $contract, null, $contract->toArray());
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Contract created successfully',
@@ -45,7 +45,7 @@ class ContractController extends Controller
             ], 201);
         } catch (\Exception $e) {
             $this->logActivity('create', new Contract(), null, $request->except('contract_file'), 'failed', $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create contract',
@@ -67,7 +67,7 @@ class ContractController extends Controller
         try {
             $oldValues = $contract->toArray();
             $data = $request->validated();
-            
+
             // Handle contract file upload
             if ($request->hasFile('contract_file')) {
                 // Delete old file if exists
@@ -76,11 +76,11 @@ class ContractController extends Controller
                 }
                 $data['contract_file'] = $request->file('contract_file')->store('contracts');
             }
-            
+
             $contract->update($data);
-            
+
             $this->logActivity('update', $contract, $oldValues, $contract->fresh()->toArray());
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Contract updated successfully',
@@ -88,7 +88,7 @@ class ContractController extends Controller
             ]);
         } catch (\Exception $e) {
             $this->logActivity('update', $contract, $oldValues, $request->except('contract_file'), 'failed', $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update contract',
@@ -99,29 +99,29 @@ class ContractController extends Controller
 
     public function destroy(Contract $contract)
     {
-        if (!auth()->user()->can('delete_contracts')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+//        if (!auth()->user()->can('delete_contracts')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
 
         try {
             $oldValues = $contract->toArray();
-            
+
             // Delete contract file if exists
             if ($contract->contract_file) {
                 \Storage::delete($contract->contract_file);
             }
-            
+
             $contract->delete();
-            
+
             $this->logActivity('delete', $contract, $oldValues, null);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Contract deleted successfully'
             ]);
         } catch (\Exception $e) {
             $this->logActivity('delete', $contract, $oldValues, null, 'failed', $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete contract',

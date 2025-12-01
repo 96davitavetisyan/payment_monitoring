@@ -22,6 +22,10 @@ class Contract extends Model
         'status',
         'contract_file',
         'notes',
+        'account_number',
+        'payment_date',
+        'payment_finish_date',
+
     ];
 
     protected $casts = [

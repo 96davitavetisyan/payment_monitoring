@@ -3,7 +3,7 @@
         <app-header></app-header>
         <div class="container mt-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1>Ապրանքներ (Products)</h1>
+                <h1>Ապրանքներ</h1>
             </div>
 
             <!-- Products Table -->
@@ -11,29 +11,29 @@
                 <thead class="table-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Անուն (Name)</th>
-                    <th>Սկիզբ (Start Date)</th>
-                    <th>Պատասխանատու (Responsible User ID)</th>
-                    <th>Կարգավիճակ (Status)</th>
-                    <th>Ստեղծվել է (Created)</th>
+                    <th>Անուն</th>
+                    <th>Սկիզբ</th>
+                    <th>Պատասխանատու</th>
+                    <th>Կարգավիճակ</th>
+                    <th>Ստեղծվել է</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="product in products" :key="product.id">
-                    <td>{{ product.id }}</td>
-                    <td>{{ product.name }}</td>
-                    <td>{{ formatDate(product.start_date) }}</td>
-                    <td>{{ product.responsible_user_id }}</td>
-                    <td>
-                        <span class="badge" :class="getStatusClass(product.status)">
-                            {{ product.status }}
-                        </span>
-                    </td>
-                    <td>{{ formatDate(product.created_at) }}</td>
-                </tr>
-                <tr v-if="products.length === 0">
-                    <td colspan="6" class="text-center">No products found</td>
-                </tr>
+                    <tr v-for="product in products" :key="product.id">
+                        <td>{{ product.id }}</td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ formatDate(product.start_date) }}</td>
+                        <td>{{ product.responsible_user.name }}</td>
+                        <td>
+                            <span class="badge" :class="getStatusClass(product.status)">
+                                {{ product.status === 'active' ? 'Ակտիվ' : 'Կասեցված' }}
+                            </span>
+                        </td>
+                        <td>{{ formatDate(product.created_at) }}</td>
+                    </tr>
+                    <tr v-if="products.length === 0">
+                        <td colspan="6" class="text-center">No products found</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -64,8 +64,14 @@ export default {
             }
         },
         formatDate(date) {
-            if (!date) return 'N/A';
-            return new Date(date).toLocaleDateString();
+            // if (!date) return 'N/A';
+            // return new Date(date).toLocaleDateString();
+
+            if (!date) return null;
+            const d = new Date(date);
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${day}-${month}-${d.getFullYear()}`;
         },
         getStatusClass(status) {
             const classes = {

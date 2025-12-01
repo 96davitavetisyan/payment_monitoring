@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Product;
 use Illuminate\Database\Seeder;
 use App\Models\Project;
 
@@ -43,7 +44,7 @@ class ProjectsSeeder extends Seeder
         ];
 
         foreach ($projects as $project) {
-            Project::create($project);
+            Product::create($project);
         }
     }
 }

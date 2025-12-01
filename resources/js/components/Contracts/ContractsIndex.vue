@@ -18,8 +18,11 @@
                         <th style="width: 150px;">Գործընկեր</th>
                         <th style="width: 150px;">Մեր ընկերություն</th>
                         <th style="width: 120px;">Ապրանք</th>
-                        <th style="width: 90px;">Սկիզբ</th>
-                        <th style="width: 90px;">Ավարտ</th>
+                        <th style="width: 90px;">Պայմանագրի սկիզբ</th>
+                        <th style="width: 90px;">Պայմանագրի ավարտ</th>
+                        <th style="width: 90px;">Վճարման օր</th>
+                        <th style="width: 90px;">Վճարման վերջնական օր</th>
+                        <th style="width: 90px;">Հաշվեհամար</th>
                         <th style="width: 80px;">Տեսակ</th>
                         <th style="width: 120px;">Գումար</th>
                         <th style="width: 90px;">Կարգավիճակ</th>
@@ -34,9 +37,12 @@
                         <td class="small">{{ contract.product?.name || '-' }}</td>
                         <td class="small">{{ formatDateShort(contract.contract_start_date) }}</td>
                         <td class="small">{{ formatDateShort(contract.contract_end_date) || '-' }}</td>
+                        <td class="small">{{ formatPaymentDate(contract.payment_date) || '-' }}</td>
+                        <td class="small">{{ formatPaymentDate(contract.payment_finish_date) || '-' }}</td>
+                        <td class="small">{{ contract.account_number || '-' }}</td>
                         <td>
                             <span class="badge bg-info" style="font-size: 10px;">
-                                {{ contract.payment_type === 'monthly' ? 'Monthly' : 'One-time' }}
+                                {{ contract.payment_type === 'monthly' ? 'Ամենամյա' : ('one_time' ? 'Միանվագ' : 'Տարեկան') }}
                             </span>
                         </td>
                         <td class="small">{{ formatAmount(contract.payment_amount) }}</td>
@@ -46,15 +52,20 @@
                             </span>
                         </td>
                         <td>
-                            <div class="btn-group btn-group-sm" role="group">
+                            <div class="" role="group">
+                                <!-- Edit -->
                                 <button class="btn btn-outline-primary" @click="editContract(contract)" title="Խմբագրել">
-                                    ✏️
+                                    <i class="fa-solid fa-pen"></i>
                                 </button>
+
+                                <!-- Transactions -->
                                 <button class="btn btn-outline-info" @click="viewTransactions(contract.id)" title="Վճարումներ">
-                                    💰
+                                    <i class="fa-solid fa-file-invoice"></i>
                                 </button>
+
+                                <!-- Delete -->
                                 <button class="btn btn-outline-danger" @click="deleteContract(contract.id)" title="Ջնջել">
-                                    🗑️
+                                    <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </td>
@@ -124,9 +135,20 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Վճարման տեսակ *</label>
                                     <select class="form-select form-select-sm" v-model="currentContract.payment_type" required>
-                                        <option value="one-time">One-time</option>
-                                        <option value="monthly">Monthly</option>
+                                        <option value="one_time">Միանվագ</option>
+                                        <option value="monthly">Ամսական</option>
+                                        <option value="yearly">Տարեկան</option>
                                     </select>
+                                </div>
+
+                                <div class="col-md-6 mb-3" v-if="isOneTimePayment">
+                                    <label class="form-label">Վճարման օր</label>
+                                    <input type="number" min="1" max="31" class="form-control form-control-sm" v-model="currentContract.payment_date">
+                                </div>
+
+                                <div class="col-md-6 mb-3" v-if="isOneTimePayment">
+                                    <label class="form-label">Վճարման վերջնական օր</label>
+                                    <input type="number" min="1" max="31" class="form-control form-control-sm" v-model="currentContract.payment_finish_date">
                                 </div>
 
                                 <div class="col-md-6 mb-3">
@@ -135,17 +157,22 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
+                                    <label class="form-label">Հաշվեհամար *</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" v-model="currentContract.account_number" required>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label">Կարգավիճակ *</label>
                                     <select class="form-select form-select-sm" v-model="currentContract.status" required>
-                                        <option value="active">Active</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
-                                        <option value="suspended">Suspended</option>
+                                        <option value="active">Ակտիվ</option>
+                                        <option value="completed">Ավարտված</option>
+                                        <option value="cancelled">Չեղարկված</option>
+                                        <option value="suspended">Կասեցված</option>
                                     </select>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Ֆայլ</label>
+                                    <label class="form-label">Պայմանագիր</label>
                                     <input type="file" class="form-control form-control-sm" @change="handleFileChange" ref="contractFile">
                                     <small v-if="currentContract.contract_file" class="text-muted">
                                         {{ getFileName(currentContract.contract_file) }}
@@ -170,6 +197,8 @@
 </template>
 
 <script>
+
+import Swal from 'sweetalert2';
 export default {
     data() {
         return {
@@ -187,8 +216,11 @@ export default {
                 contract_number: '',
                 contract_start_date: '',
                 contract_end_date: '',
+                payment_date : '',
+                payment_finish_date: '',
                 payment_type: 'monthly',
                 payment_amount: '',
+                account_number: '',
                 status: 'active',
                 notes: ''
             }
@@ -199,6 +231,11 @@ export default {
         this.fetchPartnerCompanies();
         this.fetchOwnCompanies();
         this.fetchProducts();
+    },
+    computed: {
+        isOneTimePayment() {
+            return this.currentContract.payment_type !== 'one_time';
+        }
     },
     methods: {
         async fetchContracts() {
@@ -246,8 +283,11 @@ export default {
                 contract_number: contract.contract_number,
                 contract_start_date: contract.contract_start_date,
                 contract_end_date: contract.contract_end_date,
+                payment_date : contract.payment_date ,
+                payment_finish_date: contract.payment_finish_date,
                 payment_type: contract.payment_type,
                 payment_amount: contract.payment_amount,
+                account_number: contract.account_number,
                 status: contract.status,
                 notes: contract.notes,
                 contract_file: contract.contract_file
@@ -256,6 +296,7 @@ export default {
             this.showCreateModal = true;
         },
         async saveContract() {
+            console.log(this.isEditing,"ewfd")
             try {
                 const formData = new FormData();
 
@@ -282,30 +323,80 @@ export default {
 
                 this.fetchContracts();
                 this.closeModal();
-                alert(this.isEditing ? 'Contract updated successfully' : 'Contract created successfully');
+                Swal.fire({
+                    icon: 'success',
+                    title: this.isEditing ? 'Պայմանագիրը թարմացվեց' : 'Պայմանագիր ստեղծվեց',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
+                this.isEditing = false;
+
             } catch (error) {
                 console.error('Error saving contract:', error);
-                alert('Failed to save contract: ' + (error.response?.data?.message || error.message));
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Սխալ',
+                    text: 'Չհաջողվեց պահպանել պայմանագիրը։ ' + (error.response?.data?.message || error.message),
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2500,
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
             }
         },
         async deleteContract(id) {
-            if (confirm('Are you sure you want to delete this contract?')) {
+            const result = await Swal.fire({
+                title: 'Ջնջե՞լ պայմանագիրը',
+                text: 'Վստա՞հ եք, որ ցանկանում եք ջնջել այս պայմանագիրը։',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Այո, ջնջել',
+                cancelButtonText: 'Չեղարկել'
+            });
+
+            if (result.isConfirmed) {
                 try {
                     await axios.delete(`/api/contracts/${id}`);
                     this.fetchContracts();
-                    alert('Contract deleted successfully');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ջնջված է',
+                        text: 'Պայմանագիրը հաջողությամբ ջնջվեց։',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+
                 } catch (error) {
                     console.error('Error deleting contract:', error);
-                    alert('Failed to delete contract');
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Սխալ',
+                        text: 'Չհաջողվեց ջնջել պայմանագիրը։',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
                 }
             }
         },
+
         viewTransactions(contractId) {
             this.$router.push({ name: 'contract-transactions', params: { contractId } });
         },
         closeModal() {
             this.showCreateModal = false;
-            this.isEditing = false;
             this.selectedFile = null;
             this.currentContract = {
                 partner_company_id: '',
@@ -314,8 +405,11 @@ export default {
                 contract_number: '',
                 contract_start_date: '',
                 contract_end_date: '',
+                payment_date : '',
+                payment_finish_date: '',
                 payment_type: 'monthly',
                 payment_amount: '',
+                account_number: '',
                 status: 'active',
                 notes: ''
             };
@@ -334,7 +428,29 @@ export default {
             const d = new Date(date);
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
-            return `${month}/${day}/${d.getFullYear()}`;
+            return `${day}-${month}-${d.getFullYear()}`;
+        },
+        formatPaymentDate(day) {
+            if(day){
+                const today = new Date();
+
+                const year = today.getFullYear();
+                const month = today.getMonth();
+
+                let date = new Date(year, month, day);
+
+                if (date < today) {
+                    date = new Date(year, month + 1, day);
+                }
+
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+
+                return `${dd}-${mm}-${yyyy}`;
+            }
+
+            return `-`;
         },
         getStatusClass(status) {
             const classes = {
@@ -347,10 +463,10 @@ export default {
         },
         getStatusLabel(status) {
             const labels = {
-                'active': 'Active',
-                'completed': 'Done',
-                'cancelled': 'Cancel',
-                'suspended': 'Suspend'
+                'active': 'Ակտիվ',
+                'completed': 'Ավարտված',
+                'cancelled': 'Չեղարկված',
+                'suspended': 'Կասեցված'
             };
             return labels[status] || status;
         },

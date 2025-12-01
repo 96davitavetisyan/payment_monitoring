@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentReminderMail;
 use App\Models\Transaction;
 use App\Models\TransactionFile;
 use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class TransactionController extends Controller
@@ -187,8 +189,12 @@ class TransactionController extends Controller
 
     public function sendNotification(Request $request, Transaction $transaction)
     {
+        $request->validate([
+            'file' => 'required|file|max:10240',
+        ]);
+
         try {
-            $contract = $transaction->contract()->with(['partnerCompany', 'ownCompany', 'product'])->first();
+            $contract = $transaction->contract()->with(['partnerCompany'])->first();
 
             if (!$contract->partnerCompany->contact_email) {
                 return response()->json([
@@ -197,18 +203,37 @@ class TransactionController extends Controller
                 ], 400);
             }
 
-            // Email will be implemented in next step
-            $transaction->update(['notified_at' => now()]);
+            $file = $request->file('file');
+            $path = $file->store('transaction_files');
 
-            $this->logActivity('send_notification', $transaction, null, ['email' => $contract->partnerCompany->contact_email]);
+            $transactionFile = TransactionFile::create([
+                'transaction_id' => $transaction->id,
+                'file_path' => $path,
+                'file_name' => $file->getClientOriginalName(),
+                'file_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
+            ]);
+
+            Mail::send('emails.payment_reminder', ['transaction' => $transaction], function ($message) use ($contract, $transactionFile) {
+                $message->to($contract->partnerCompany->contact_email)
+                    ->subject('Վճարման հիշեցում')
+                    ->attach(storage_path('app/' . $transactionFile->file_path), [
+                        'as' => $transactionFile->file_name,
+                        'mime' => $transactionFile->file_type
+                    ]);
+            });
+
+//            Mail::raw('Test', function($message){
+//                $message->to('test@example.com')->subject('Test email');
+//            });
+
+            $transaction->update(['notified_at' => now()]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Notification sent successfully'
             ]);
         } catch (\Exception $e) {
-            $this->logActivity('send_notification', $transaction, null, null, 'failed', $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send notification',
@@ -245,5 +270,49 @@ class TransactionController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+    public function updatePaidFile(Request $request, Transaction $transaction)
+    {
+        $request->validate([
+            'paid_date' => 'required|date',
+            'file' => 'required|file|max:10240', // 10MB
+        ]);
+
+        try {
+
+            $path = $request->file('file')->store('transaction_files');
+
+            TransactionFile::create([
+                'transaction_id' => $transaction->id,
+                'file_path' => $path,
+                'file_name' => $request->file('file')->getClientOriginalName(),
+                'file_type' => $request->file('file')->getMimeType(),
+                'file_size' => $request->file('file')->getSize(),
+            ]);
+
+            $transaction->update([
+                'paid_date' => $request->paid_date,
+                'payment_status' => 'paid',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction updated successfully',
+                'data' => $transaction->load('files')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update transaction',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    public function downloadFile(TransactionFile $file)
+    {
+        if (!$file->file_path || !Storage::exists($file->file_path)) {
+            abort(404, 'File not found');
+        }
+        return Storage::download($file->file_path, $file->file_name ?? 'file');
     }
 }

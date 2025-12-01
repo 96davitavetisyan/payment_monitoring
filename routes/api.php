@@ -86,3 +86,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('transactions/{transaction}/upload-files', [\App\Http\Controllers\TransactionController::class, 'uploadFiles']);
     Route::delete('transactions/{transaction}/files/{file}', [\App\Http\Controllers\TransactionController::class, 'deleteFile']);
     Route::post('transactions/{transaction}/send-notification', [\App\Http\Controllers\TransactionController::class, 'sendNotification']);
+    Route::post('/transactions/{transaction}/paid-file', [\App\Http\Controllers\TransactionController::class, 'updatePaidFile']);
+    Route::get('/transaction-files/download/{file}', [\App\Http\Controllers\TransactionController::class, 'downloadFile']);
+

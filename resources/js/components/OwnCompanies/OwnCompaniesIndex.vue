@@ -3,7 +3,7 @@
         <app-header></app-header>
         <div class="container mt-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1>Մեր ընկերություններ (Own Companies)</h1>
+                <h1>Մեր ընկերություններ</h1>
                 <button class="btn btn-success" @click="showCreateModal = true">
                     + Ավելացնել
                 </button>
@@ -13,14 +13,14 @@
             <table class="table table-striped table-bordered">
                 <thead class="table-dark">
                 <tr>
-                    <th>Անուն (Name)</th>
-                    <th>Իրավաբանական անվանում (Legal Name)</th>
-                    <th>ՀՎՀՀ (Tax ID)</th>
-                    <th>Հասցե (Address)</th>
-                    <th>Հեռախոս (Phone)</th>
-                    <th>Էլ․ Փոստ (Email)</th>
-                    <th>Կարգավիճակ (Status)</th>
-                    <th>Գործողություններ (Actions)</th>
+                    <th>Անուն</th>
+                    <th>Իրավաբանական անվանում</th>
+                    <th>ՀՎՀՀ</th>
+                    <th>Հասցե</th>
+                    <th>Հեռախոս</th>
+                    <th>Էլ․ Փոստ</th>
+                    <th>Կարգավիճակ</th>
+                    <th>Գործողություններ</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -33,15 +33,15 @@
                     <td>{{ company.email || 'N/A' }}</td>
                     <td>
                         <span class="badge" :class="company.is_active ? 'bg-success' : 'bg-secondary'">
-                            {{ company.is_active ? 'Active' : 'Inactive' }}
+                            {{ company.is_active ? 'Ակտիվ' : 'Անգործուն' }}
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-primary me-2" @click="editCompany(company)">
-                            Խմբագրել
+                        <button class="btn btn-outline-primary" @click="editCompany(company)" title="Խմբագրել">
+                            <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" @click="deleteCompany(company.id)">
-                            Ջնջել
+                        <button class="btn btn-outline-danger" @click="deleteCompany(company.id)" title="Ջնջել">
+                            <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
                 </tr>
@@ -61,40 +61,40 @@
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label class="form-label">Անուն (Name) *</label>
+                                <label class="form-label">Անուն *</label>
                                 <input type="text" class="form-control" v-model="currentCompany.name" required>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Իրավաբանական անվանում (Legal Name)</label>
+                                <label class="form-label">Իրավաբանական անվանում</label>
                                 <input type="text" class="form-control" v-model="currentCompany.legal_name">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">ՀՎՀՀ (Tax ID)</label>
+                                <label class="form-label">ՀՎՀՀ</label>
                                 <input type="text" class="form-control" v-model="currentCompany.tax_id">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Հասցե (Address)</label>
+                                <label class="form-label">Հասցե</label>
                                 <input type="text" class="form-control" v-model="currentCompany.address">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Հեռախոս (Phone)</label>
+                                <label class="form-label">Հեռախոս</label>
                                 <input type="text" class="form-control" v-model="currentCompany.phone">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Էլ․ Փոստ (Email)</label>
+                                <label class="form-label">Էլ․ Փոստ)</label>
                                 <input type="email" class="form-control" v-model="currentCompany.email">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Կարգավիճակ (Status)</label>
+                                <label class="form-label">Կարգավիճակ</label>
                                 <select class="form-select" v-model="currentCompany.is_active">
-                                    <option :value="true">Active</option>
-                                    <option :value="false">Inactive</option>
+                                    <option :value="true">Ակտիվ</option>
+                                    <option :value="false">Անգործուն</option>
                                 </select>
                             </div>
                         </div>

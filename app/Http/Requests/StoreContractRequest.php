@@ -6,10 +6,10 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreContractRequest extends FormRequest
 {
-    public function authorize()
-    {
-        return $this->user()->can('create_contracts');
-    }
+//    public function authorize()
+//    {
+//        return $this->user()->can('create_contracts');
+//    }
 
     public function rules()
     {
@@ -21,10 +21,30 @@ class StoreContractRequest extends FormRequest
             'contract_start_date' => 'required|date',
             'contract_end_date' => 'nullable|date|after:contract_start_date',
             'payment_type' => 'required|in:one-time,monthly',
+            'account_number' => 'required|numeric|min:0',
             'payment_amount' => 'required|numeric|min:0',
             'status' => 'sometimes|in:active,completed,cancelled,suspended',
             'contract_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
             'notes' => 'nullable|string',
+
+            'payment_date' => [
+                'nullable',
+                'numeric',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->payment_type, ['monthly', 'yearly']) && !$value) {
+                        $fail('Վճարման օրը պարտադիր է՝ ընտրելով «Տարեկան» կամ «Ամսական» վճարումը։');
+                    }
+                },
+            ],
+            'payment_finish_date' => [
+                'nullable',
+                'numeric',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->payment_type, ['monthly', 'yearly']) && !$value) {
+                        $fail('Վճարման վերջնական օրը պարտադիր է՝ ընտրելով «Տարեկան» կամ «Ամսական» վճարումը։');
+                    }
+                },
+            ],
         ];
     }
 }

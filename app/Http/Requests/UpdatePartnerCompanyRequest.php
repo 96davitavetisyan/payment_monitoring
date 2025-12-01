@@ -6,10 +6,10 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdatePartnerCompanyRequest extends FormRequest
 {
-    public function authorize()
-    {
-        return $this->user()->can('edit_partner_companies');
-    }
+//    public function authorize()
+//    {
+////        return $this->user()->can('edit_partner_companies');
+//    }
 
     public function rules()
     {

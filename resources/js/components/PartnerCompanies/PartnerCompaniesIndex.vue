@@ -3,7 +3,7 @@
         <app-header></app-header>
         <div class="container mt-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1>Գործընկեր ընկերություններ (Partner Companies)</h1>
+                <h1>Գործընկեր կազմակերպություններ</h1>
                 <button class="btn btn-success" @click="showCreateModal = true">
                     + Ավելացնել
                 </button>
@@ -13,36 +13,40 @@
             <table class="table table-striped table-bordered">
                 <thead class="table-dark">
                 <tr>
-                    <th>Անուն (Name)</th>
-                    <th>Կապ (Contact Person)</th>
-                    <th>Էլ․ Փոստ (Email)</th>
-                    <th>Հեռախոս (Phone)</th>
-                    <th>Կարգավիճակ (Status)</th>
-                    <th>Գործողություններ (Actions)</th>
+                    <th>Կազմակերպության անվանումը</th>
+                    <th>ՀՎՀՀ</th>
+                    <th>Կոնտակտային անձ</th>
+                    <th>Կոնտակտային անձի պաշտոնը</th>
+                    <th>Էլ․ Փոստ</th>
+                    <th>Հեռախոս</th>
+                    <th>Կարգավիճակ</th>
+                    <th>Գործողություններ</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr v-for="company in companies" :key="company.id">
                     <td>{{ company.name }}</td>
+                    <td>{{ company.tax_id }}</td>
                     <td>{{ company.contact_person || 'N/A' }}</td>
+                    <td>{{ company.contact_person_position || 'N/A' }}</td>
                     <td>{{ company.contact_email || 'N/A' }}</td>
                     <td>{{ company.contact_phone || 'N/A' }}</td>
                     <td>
                         <span class="badge" :class="company.is_active ? 'bg-success' : 'bg-secondary'">
-                            {{ company.is_active ? 'Active' : 'Inactive' }}
+                            {{ company.is_active ? 'Ակտիվ' : 'Անգործուն' }}
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-primary me-2" @click="editCompany(company)">
-                            Խմբագրել
+                        <button class="btn btn-outline-primary" @click="editCompany(company)">
+                            <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" @click="deleteCompany(company.id)">
-                            Ջնջել
+                        <button class="btn btn-outline-danger" @click="deleteCompany(company.id)">
+                            <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
                 </tr>
                 <tr v-if="companies.length === 0">
-                    <td colspan="6" class="text-center">No partner companies found</td>
+                    <td colspan="6" class="text-center">Գործընկեր ընկերություններ չեն գտնվել</td>
                 </tr>
                 </tbody>
             </table>
@@ -52,35 +56,42 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">{{ isEditing ? 'Խմբագրել' : 'Ավելացնել' }} Գործընկեր ընկերություն</h5>
+                            <h5 class="modal-title">{{ isEditing ? 'Խմբագրել' : 'Ավելացնել' }} Գործընկեր կազմակերպություններ</h5>
                             <button type="button" class="btn-close" @click="closeModal"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label class="form-label">Անուն (Name) *</label>
+                                <label class="form-label">Կազմակերպության անվանումը</label>
                                 <input type="text" class="form-control" v-model="currentCompany.name" required>
                             </div>
-
                             <div class="mb-3">
-                                <label class="form-label">Կապ (Contact Person)</label>
+                                <label class="form-label">ՀՎՀՀ</label>
+                                <input type="text" class="form-control" v-model="currentCompany.tax_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Կոնտակտային անձ</label>
                                 <input type="text" class="form-control" v-model="currentCompany.contact_person">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Կոնտակտային անձի պաշտոնը</label>
+                                <input type="text" class="form-control" v-model="currentCompany.contact_person_position">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Էլ․ Փոստ (Email)</label>
+                                <label class="form-label">Էլ․ Փոստ </label>
                                 <input type="email" class="form-control" v-model="currentCompany.contact_email">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Հեռախոս (Phone)</label>
+                                <label class="form-label">Հեռախոս</label>
                                 <input type="text" class="form-control" v-model="currentCompany.contact_phone">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Կարգավիճակ (Status)</label>
+                                <label class="form-label">Կարգավիճակ</label>
                                 <select class="form-select" v-model="currentCompany.is_active">
-                                    <option :value="true">Active</option>
-                                    <option :value="false">Inactive</option>
+                                    <option :value="true">Ակտիվ</option>
+                                    <option :value="false">Անգործուն</option>
                                 </select>
                             </div>
                         </div>
@@ -96,6 +107,7 @@
 </template>
 
 <script>
+import Swal from 'sweetalert2';
 export default {
     data() {
         return {
@@ -104,7 +116,9 @@ export default {
             isEditing: false,
             currentCompany: {
                 name: '',
+                tax_id: '',
                 contact_person: '',
+                contact_person_position: '',
                 contact_email: '',
                 contact_phone: '',
                 is_active: true
@@ -121,7 +135,17 @@ export default {
                 this.companies = response.data.data;
             } catch (error) {
                 console.error('Error fetching partner companies:', error);
-                alert('Failed to load partner companies');
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Սխալ',
+                    text: 'Չհաջողվեց բեռնել գործընկեր կազմակերպությունների ցանկը։',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2500,
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
             }
         },
         editCompany(company) {
@@ -129,6 +153,7 @@ export default {
             this.isEditing = true;
             this.showCreateModal = true;
         },
+
         async saveCompany() {
             try {
                 if (this.isEditing) {
@@ -136,32 +161,89 @@ export default {
                 } else {
                     await axios.post('/api/partner-companies', this.currentCompany);
                 }
+
                 this.fetchCompanies();
                 this.closeModal();
-                alert(this.isEditing ? 'Partner company updated successfully' : 'Partner company created successfully');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: this.isEditing ? 'Թարմացված է' : ' Ստեղծված է',
+                    text: this.isEditing
+                        ? 'Գործընկեր կազմակերպությունը հաջողությամբ թարմացվեց։'
+                        : 'Գործընկեր կազմակերպությունը հաջողությամբ ստեղծվեց։',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
+
             } catch (error) {
                 console.error('Error saving partner company:', error);
-                alert('Failed to save partner company: ' + (error.response?.data?.message || error.message));
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Սխալ',
+                    text: error.response?.data?.message
+                        ? `Չհաջողվեց պահպանել․ ${error.response.data.message}`
+                        : 'Չհաջողվեց պահպանել գործընկեր կազմակերպությունը։',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2500,
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
             }
         },
         async deleteCompany(id) {
-            if (confirm('Are you sure you want to delete this partner company?')) {
+            const result = await Swal.fire({
+                title: 'Ջնջե՞լ ընկերությունը',
+                text: 'Վստա՞հ եք, որ ցանկանում եք ջնջել այս գործընկեր կազմակերպությանը։',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Այո, ջնջել',
+                cancelButtonText: 'Չեղարկել'
+            });
+
+            if (result.isConfirmed) {
                 try {
                     await axios.delete(`/api/partner-companies/${id}`);
                     this.fetchCompanies();
-                    alert('Partner company deleted successfully');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ջնջված է',
+                        text: 'Ընկերությունը հաջողությամբ ջնջվեց։',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+
                 } catch (error) {
-                    console.error('Error deleting partner company:', error);
-                    alert('Failed to delete partner company');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Սխալ',
+                        text: 'Չհաջողվեց ջնջել ընկերությունը։',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
                 }
             }
         },
+
         closeModal() {
             this.showCreateModal = false;
             this.isEditing = false;
             this.currentCompany = {
                 name: '',
+                tax_id: '',
                 contact_person: '',
+                contact_person_position: '',
                 contact_email: '',
                 contact_phone: '',
                 is_active: true
