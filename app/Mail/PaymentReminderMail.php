@@ -21,7 +21,7 @@ class PaymentReminderMail extends Mailable
     public function build()
     {
         return $this->subject('Payment Reminder')
-            ->view('emails.payment_reminder') // создаём Blade-шаблон
+            ->view('emails.payment_reminder')
             ->with([
                 'transaction' => $this->transaction,
             ]);

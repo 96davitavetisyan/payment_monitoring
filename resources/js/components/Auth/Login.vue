@@ -69,8 +69,8 @@ export default {
                 // Update axios default header
                 axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
 
-                // Redirect to projects
-                this.$router.push('/projects');
+                // Redirect to products
+                this.$router.push('/products');
             } catch (err) {
                 this.error = err.response?.data?.message || 'Login failed. Please try again.';
             } finally {

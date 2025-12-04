@@ -25,7 +25,14 @@
                 </thead>
                 <tbody>
                 <tr v-for="company in companies" :key="company.id">
-                    <td>{{ company.name }}</td>
+                    <td>
+                        <a href="#" @click.prevent="showCompanyContracts(company)" class="text-primary" style="cursor: pointer; text-decoration: underline;">
+                            {{ company.name }}
+                            <span v-if="company.contracts && company.contracts.length > 0" class="badge bg-info ms-1" style="font-size: 10px;">
+                                {{ company.contracts.length }}
+                            </span>
+                        </a>
+                    </td>
                     <td>{{ company.tax_id }}</td>
                     <td>{{ company.contact_person || 'N/A' }}</td>
                     <td>{{ company.contact_person_position || 'N/A' }}</td>
@@ -62,29 +69,47 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label">Կազմակերպության անվանումը</label>
-                                <input type="text" class="form-control" v-model="currentCompany.name" required>
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.name}" v-model="currentCompany.name" required>
+                                <div class="invalid-feedback" v-if="errors.name">
+                                    {{ errors.name[0] }}
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">ՀՎՀՀ</label>
-                                <input type="text" class="form-control" v-model="currentCompany.tax_id" required>
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.tax_id}" v-model="currentCompany.tax_id" required>
+                                <div class="invalid-feedback" v-if="errors.tax_id">
+                                    {{ errors.tax_id[0] }}
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Կոնտակտային անձ</label>
-                                <input type="text" class="form-control" v-model="currentCompany.contact_person">
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.contact_person}" v-model="currentCompany.contact_person">
+                                <div class="invalid-feedback" v-if="errors.contact_person">
+                                    {{ errors.contact_person[0] }}
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Կոնտակտային անձի պաշտոնը</label>
-                                <input type="text" class="form-control" v-model="currentCompany.contact_person_position">
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.contact_person_position}" v-model="currentCompany.contact_person_position">
+                                <div class="invalid-feedback" v-if="errors.contact_person_position">
+                                    {{ errors.contact_person_position[0] }}
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Էլ․ Փոստ </label>
-                                <input type="email" class="form-control" v-model="currentCompany.contact_email">
+                                <input type="email" class="form-control" :class="{'is-invalid': errors.contact_email}" v-model="currentCompany.contact_email">
+                                <div class="invalid-feedback" v-if="errors.contact_email">
+                                    {{ errors.contact_email[0] }}
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Հեռախոս</label>
-                                <input type="text" class="form-control" v-model="currentCompany.contact_phone">
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.contact_phone}" v-model="currentCompany.contact_phone">
+                                <div class="invalid-feedback" v-if="errors.contact_phone">
+                                    {{ errors.contact_phone[0] }}
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -102,18 +127,35 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Contracts Modal -->
+            <contracts-modal
+                :show="showContractsModal"
+                :title="selectedCompany?.name || ''"
+                :contracts="companyContracts"
+                @close="closeContractsModal"
+            />
         </div>
     </div>
 </template>
 
 <script>
 import Swal from 'sweetalert2';
+import ContractsModal from '../Shared/ContractsModal.vue';
+
 export default {
+    components: {
+        ContractsModal
+    },
     data() {
         return {
             companies: [],
             showCreateModal: false,
+            showContractsModal: false,
             isEditing: false,
+            errors: {},
+            selectedCompany: null,
+            companyContracts: [],
             currentCompany: {
                 name: '',
                 tax_id: '',
@@ -131,7 +173,7 @@ export default {
     methods: {
         async fetchCompanies() {
             try {
-                const response = await axios.get('/api/partner-companies');
+                const response = await axios.get('/api/partner-companies?with_contracts=1');
                 this.companies = response.data.data;
             } catch (error) {
                 console.error('Error fetching partner companies:', error);
@@ -181,18 +223,34 @@ export default {
             } catch (error) {
                 console.error('Error saving partner company:', error);
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Սխալ',
-                    text: error.response?.data?.message
-                        ? `Չհաջողվեց պահպանել․ ${error.response.data.message}`
-                        : 'Չհաջողվեց պահպանել գործընկեր կազմակերպությունը։',
-                    toast: true,
-                    position: 'top-end',
-                    timer: 2500,
-                    showConfirmButton: false,
-                    timerProgressBar: true
-                });
+                // Handle validation errors
+                if (error.response && error.response.status === 422) {
+                    this.errors = error.response.data.errors || {};
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Սխալ',
+                        text: 'Խնդրում ենք ստուգել լրացված դաշտերը',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Սխալ',
+                        text: error.response?.data?.message
+                            ? `Չհաջողվեց պահպանել․ ${error.response.data.message}`
+                            : 'Չհաջողվեց պահպանել գործընկեր կազմակերպությունը։',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                }
             }
         },
         async deleteCompany(id) {
@@ -239,6 +297,7 @@ export default {
         closeModal() {
             this.showCreateModal = false;
             this.isEditing = false;
+            this.errors = {};
             this.currentCompany = {
                 name: '',
                 tax_id: '',
@@ -248,6 +307,16 @@ export default {
                 contact_phone: '',
                 is_active: true
             };
+        },
+        showCompanyContracts(company) {
+            this.selectedCompany = company;
+            this.companyContracts = company.contracts || [];
+            this.showContractsModal = true;
+        },
+        closeContractsModal() {
+            this.showContractsModal = false;
+            this.selectedCompany = null;
+            this.companyContracts = [];
         }
     }
 };

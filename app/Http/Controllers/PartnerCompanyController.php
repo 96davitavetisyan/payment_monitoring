@@ -12,9 +12,18 @@ class PartnerCompanyController extends Controller
 {
     use LogsActivity;
 
-    public function index()
+    public function index(Request $request)
     {
-        $companies = PartnerCompany::orderBy('created_at', 'desc')->get();
+        $query = PartnerCompany::query();
+
+        // Optionally load contracts with related data
+        if ($request->has('with_contracts')) {
+            $query->with(['contracts' => function($q) {
+                $q->with(['ownCompany', 'product'])->orderBy('created_at', 'desc');
+            }]);
+        }
+
+        $companies = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'success' => true,

@@ -71,4 +71,36 @@ class UpdateContractRequest extends FormRequest
             ],
         ];
     }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array
+     */
+    public function messages()
+    {
+        return [
+            'partner_company_id.required' => 'Գործընկեր ընկերությունը պարտադիր է',
+            'partner_company_id.exists' => 'Ընտրված գործընկեր ընկերությունը գոյություն չունի',
+            'own_company_id.required' => 'Սեփական ընկերությունը պարտադիր է',
+            'own_company_id.exists' => 'Ընտրված սեփական ընկերությունը գոյություն չունի',
+            'product_id.required' => 'Ապրանքը պարտադիր է',
+            'product_id.exists' => 'Ընտրված ապրանքը գոյություն չունի',
+            'contract_number.unique' => 'Այս համարով պայմանագիրը արդեն գոյություն ունի',
+            'contract_start_date.required' => 'Պայմանագրի սկզբի ամսաթիվը պարտադիր է',
+            'contract_end_date.after' => 'Պայմանագրի ավարտի ամսաթիվը պետք է լինի սկզբի ամսաթվից հետո',
+            'payment_type.required' => 'Վճարման տեսակը պարտադիր է',
+            'payment_type.in' => 'Վճարման տեսակը պետք է լինի տարեկան, ամսական կամ միանվագ',
+            'account_number.required' => 'Հաշվի համարը պարտադիր է',
+            'account_number.min' => 'Հաշվի համարը պետք է լինի 0-ից մեծ կամ հավասար',
+            'payment_amount.required' => 'Վճարման գումարը պարտադիր է',
+            'payment_amount.min' => 'Վճարման գումարը պետք է լինի 0-ից մեծ կամ հավասար',
+            'payment_date.min' => 'Վճարման օրը պետք է լինի 1-ից մեծ կամ հավասար',
+            'payment_date.max' => 'Վճարման օրը պետք է լինի 31-ից փոքր կամ հավասար',
+            'payment_finish_date.min' => 'Վճարման վերջնական օրը պետք է լինի 1-ից մեծ կամ հավասար',
+            'payment_finish_date.max' => 'Վճարման վերջնական օրը պետք է լինի 31-ից փոքր կամ հավասար',
+            'contract_file.mimes' => 'Պայմանագրի ֆայլը պետք է լինի PDF, DOC կամ DOCX ձևաչափով',
+            'contract_file.max' => 'Պայմանագրի ֆայլի չափը չպետք է գերազանցի 10ՄԲ',
+        ];
+    }
 }

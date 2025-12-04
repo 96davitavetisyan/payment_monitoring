@@ -12,7 +12,9 @@ class PartnerCompany extends Model
 
     protected $fillable = [
         'name',
+        'tax_id',
         'contact_person',
+        'contact_person_position',
         'contact_email',
         'contact_phone',
         'is_active',

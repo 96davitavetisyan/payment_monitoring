@@ -23,7 +23,7 @@
                         <th style="width: 90px;">Վճարման օր</th>
                         <th style="width: 90px;">Վճարման վերջնական օր</th>
                         <th style="width: 90px;">Հաշվեհամար</th>
-                        <th style="width: 80px;">Տեսակ</th>
+                        <th style="width: 80px;">Վճարման տեսակ</th>
                         <th style="width: 120px;">Գումար</th>
                         <th style="width: 90px;">Կարգավիճակ</th>
                         <th style="width: 150px;">Գործողություններ</th>
@@ -35,19 +35,17 @@
                         <td class="small">{{ contract.partner_company?.name || '-' }}</td>
                         <td class="small">{{ contract.own_company?.name || '-' }}</td>
                         <td class="small">{{ contract.product?.name || '-' }}</td>
-                        <td class="small">{{ formatDateShort(contract.contract_start_date) }}</td>
-                        <td class="small">{{ formatDateShort(contract.contract_end_date) || '-' }}</td>
+                        <td class="small">{{ formatDate(contract.contract_start_date) }}</td>
+                        <td class="small">{{ formatDate(contract.contract_end_date) || '-' }}</td>
                         <td class="small">{{ formatPaymentDate(contract.payment_date) || '-' }}</td>
                         <td class="small">{{ formatPaymentDate(contract.payment_finish_date) || '-' }}</td>
                         <td class="small">{{ contract.account_number || '-' }}</td>
                         <td>
-                            <span class="badge bg-info" style="font-size: 10px;">
-                                {{ contract.payment_type === 'monthly' ? 'Ամենամյա' : ('one_time' ? 'Միանվագ' : 'Տարեկան') }}
-                            </span>
+                            {{ contract.payment_type === 'monthly' ? 'Ամենամյա' : (contract.payment_type === 'one_time' ? 'Միանվագ' : 'Տարեկան') }}
                         </td>
                         <td class="small">{{ formatAmount(contract.payment_amount) }}</td>
                         <td>
-                            <span class="badge" :class="getStatusClass(contract.status)" style="font-size: 10px;">
+                            <span class="badge" :class="getStatusClass(contract.status)">
                                 {{ getStatusLabel(contract.status) }}
                             </span>
                         </td>
@@ -89,94 +87,133 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Գործընկեր *</label>
-                                    <select class="form-select form-select-sm" v-model="currentContract.partner_company_id" required>
+                                    <select class="form-select form-select-sm" :class="{'is-invalid': errors.partner_company_id}" v-model="currentContract.partner_company_id" required>
                                         <option value="">Ընտրել</option>
                                         <option v-for="partner in partnerCompanies" :key="partner.id" :value="partner.id">
                                             {{ partner.name }}
                                         </option>
                                     </select>
+                                    <div class="invalid-feedback" v-if="errors.partner_company_id">
+                                        {{ errors.partner_company_id[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Մեր ընկերություն *</label>
-                                    <select class="form-select form-select-sm" v-model="currentContract.own_company_id" required>
+                                    <select class="form-select form-select-sm" :class="{'is-invalid': errors.own_company_id}" v-model="currentContract.own_company_id" required>
                                         <option value="">Ընտրել</option>
                                         <option v-for="own in ownCompanies" :key="own.id" :value="own.id">
                                             {{ own.name }}
                                         </option>
                                     </select>
+                                    <div class="invalid-feedback" v-if="errors.own_company_id">
+                                        {{ errors.own_company_id[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Ապրանք *</label>
-                                    <select class="form-select form-select-sm" v-model="currentContract.product_id" required>
+                                    <select class="form-select form-select-sm" :class="{'is-invalid': errors.product_id}" v-model="currentContract.product_id" required>
                                         <option value="">Ընտրել</option>
                                         <option v-for="product in products" :key="product.id" :value="product.id">
                                             {{ product.name }}
                                         </option>
                                     </select>
+                                    <div class="invalid-feedback" v-if="errors.product_id">
+                                        {{ errors.product_id[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Համար</label>
-                                    <input type="text" class="form-control form-control-sm" v-model="currentContract.contract_number">
+                                    <label class="form-label">Պայմանագրի համար</label>
+                                    <input type="text" class="form-control form-control-sm" :class="{'is-invalid': errors.contract_number}" v-model="currentContract.contract_number">
+                                    <div class="invalid-feedback" v-if="errors.contract_number">
+                                        {{ errors.contract_number[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Սկիզբ *</label>
-                                    <input type="date" class="form-control form-control-sm" v-model="currentContract.contract_start_date" required>
+                                    <label class="form-label">Պայմանագրի սկիզբ *</label>
+                                    <DatePicker class="w-100" :class="{'is-invalid': errors.contract_start_date}" v-model="currentContract.contract_start_date" format="DD-MM-YYYY" placeholder="Ընտրել" value-type="format" required/>
+                                    <div class="invalid-feedback" v-if="errors.contract_start_date">
+                                        {{ errors.contract_start_date[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Ավարտ</label>
-                                    <input type="date" class="form-control form-control-sm" v-model="currentContract.contract_end_date">
+                                    <label class="form-label">Պայմանագրի ավարտ</label>
+                                    <DatePicker class="w-100" :class="{'is-invalid': errors.contract_end_date}" v-model="currentContract.contract_end_date" format="DD-MM-YYYY" placeholder="Ընտրել" value-type="format" required/>
+                                    <div class="invalid-feedback" v-if="errors.contract_end_date">
+                                        {{ errors.contract_end_date[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Վճարման տեսակ *</label>
-                                    <select class="form-select form-select-sm" v-model="currentContract.payment_type" required>
+                                    <select class="form-select form-select-sm" :class="{'is-invalid': errors.payment_type}" v-model="currentContract.payment_type" required>
                                         <option value="one_time">Միանվագ</option>
-                                        <option value="monthly">Ամսական</option>
+                                        <option value="monthly">Ամենամյա</option>
                                         <option value="yearly">Տարեկան</option>
                                     </select>
+                                    <div class="invalid-feedback" v-if="errors.payment_type">
+                                        {{ errors.payment_type[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3" v-if="isOneTimePayment">
                                     <label class="form-label">Վճարման օր</label>
-                                    <input type="number" min="1" max="31" class="form-control form-control-sm" v-model="currentContract.payment_date">
+                                    <input type="number" min="1" max="31" class="form-control form-control-sm" :class="{'is-invalid': errors.payment_date}" v-model="currentContract.payment_date">
+                                    <div class="invalid-feedback" v-if="errors.payment_date">
+                                        {{ errors.payment_date[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3" v-if="isOneTimePayment">
                                     <label class="form-label">Վճարման վերջնական օր</label>
-                                    <input type="number" min="1" max="31" class="form-control form-control-sm" v-model="currentContract.payment_finish_date">
+                                    <input type="number" min="1" max="31" class="form-control form-control-sm" :class="{'is-invalid': errors.payment_finish_date}" v-model="currentContract.payment_finish_date">
+                                    <div class="invalid-feedback" v-if="errors.payment_finish_date">
+                                        {{ errors.payment_finish_date[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Գումար *</label>
-                                    <input type="number" step="0.01" class="form-control form-control-sm" v-model="currentContract.payment_amount" required>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" :class="{'is-invalid': errors.payment_amount}" v-model="currentContract.payment_amount" required>
+                                    <div class="invalid-feedback" v-if="errors.payment_amount">
+                                        {{ errors.payment_amount[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Հաշվեհամար *</label>
-                                    <input type="number" step="0.01" class="form-control form-control-sm" v-model="currentContract.account_number" required>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" :class="{'is-invalid': errors.account_number}" v-model="currentContract.account_number" required>
+                                    <div class="invalid-feedback" v-if="errors.account_number">
+                                        {{ errors.account_number[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Կարգավիճակ *</label>
-                                    <select class="form-select form-select-sm" v-model="currentContract.status" required>
+                                    <select class="form-select form-select-sm" :class="{'is-invalid': errors.status}" v-model="currentContract.status" required>
                                         <option value="active">Ակտիվ</option>
                                         <option value="completed">Ավարտված</option>
                                         <option value="cancelled">Չեղարկված</option>
                                         <option value="suspended">Կասեցված</option>
                                     </select>
+                                    <div class="invalid-feedback" v-if="errors.status">
+                                        {{ errors.status[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Պայմանագիր</label>
-                                    <input type="file" class="form-control form-control-sm" @change="handleFileChange" ref="contractFile">
+                                    <input type="file" class="form-control form-control-sm" :class="{'is-invalid': errors.contract_file}" @change="handleFileChange" ref="contractFile">
                                     <small v-if="currentContract.contract_file" class="text-muted">
                                         {{ getFileName(currentContract.contract_file) }}
                                     </small>
+                                    <div class="invalid-feedback" v-if="errors.contract_file">
+                                        {{ errors.contract_file[0] }}
+                                    </div>
                                 </div>
 
                                 <div class="col-md-12 mb-3">
@@ -199,7 +236,12 @@
 <script>
 
 import Swal from 'sweetalert2';
+import dateMixin from '../../mixins/dateMixin';
+import DatePicker from 'vue2-datepicker';
+
 export default {
+    mixins: [dateMixin],
+    components: { DatePicker },
     data() {
         return {
             contracts: [],
@@ -209,6 +251,7 @@ export default {
             showCreateModal: false,
             isEditing: false,
             selectedFile: null,
+            errors: {},
             currentContract: {
                 partner_company_id: '',
                 own_company_id: '',
@@ -281,8 +324,8 @@ export default {
                 own_company_id: contract.own_company_id,
                 product_id: contract.product_id,
                 contract_number: contract.contract_number,
-                contract_start_date: contract.contract_start_date,
-                contract_end_date: contract.contract_end_date,
+                contract_start_date: this.formatDate(contract.contract_start_date),
+                contract_end_date: this.formatDate(contract.contract_end_date),
                 payment_date : contract.payment_date ,
                 payment_finish_date: contract.payment_finish_date,
                 payment_type: contract.payment_type,
@@ -337,16 +380,32 @@ export default {
             } catch (error) {
                 console.error('Error saving contract:', error);
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Սխալ',
-                    text: 'Չհաջողվեց պահպանել պայմանագիրը։ ' + (error.response?.data?.message || error.message),
-                    toast: true,
-                    position: 'top-end',
-                    timer: 2500,
-                    showConfirmButton: false,
-                    timerProgressBar: true
-                });
+                // Handle validation errors
+                if (error.response && error.response.status === 422) {
+                    this.errors = error.response.data.errors || {};
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Սխալ',
+                        text: 'Խնդրում ենք ստուգել լրացված դաշտերը',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Սխալ',
+                        text: 'Չհաջողվեց պահպանել պայմանագիրը։ ' + (error.response?.data?.message || error.message),
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                }
             }
         },
         async deleteContract(id) {
@@ -398,6 +457,7 @@ export default {
         closeModal() {
             this.showCreateModal = false;
             this.selectedFile = null;
+            this.errors = {};
             this.currentContract = {
                 partner_company_id: '',
                 own_company_id: '',
@@ -422,13 +482,6 @@ export default {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             }).format(amount) + ' ֏';
-        },
-        formatDateShort(date) {
-            if (!date) return null;
-            const d = new Date(date);
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${day}-${month}-${d.getFullYear()}`;
         },
         formatPaymentDate(day) {
             if(day){

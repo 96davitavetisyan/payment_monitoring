@@ -11,10 +11,10 @@ class StoreProductRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
-    {
-        return $this->user()->can('create_products');
-    }
+//    public function authorize()
+//    {
+//        return $this->user()->can('create_products');
+//    }
 
     /**
      * Get the validation rules that apply to the request.
@@ -39,11 +39,11 @@ class StoreProductRequest extends FormRequest
     public function messages()
     {
         return [
-            'name.required' => 'Product name is required',
-            'name.unique' => 'A product with this name already exists',
-            'responsible_user_id.required' => 'Responsible user is required',
-            'responsible_user_id.exists' => 'Selected user does not exist',
-            'status.required' => 'Product status is required',
+            'name.required' => 'Ապրանքի անունը պարտադիր է',
+            'name.unique' => 'Ապրանքի նման անուն արդեն գոյություն ունի',
+            'responsible_user_id.required' => 'Պատասխանատու օգտատերը պարտադիր է',
+            'responsible_user_id.exists' => 'Ընտրված օգտատերը գոյություն չունի',
+            'status.required' => 'Ապրանքի կարգավիճակը պարտադիր է',
         ];
     }
 }

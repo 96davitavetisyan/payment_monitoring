@@ -14,7 +14,6 @@
                 <thead class="table-dark">
                 <tr>
                     <th>Անուն</th>
-                    <th>Իրավաբանական անվանում</th>
                     <th>ՀՎՀՀ</th>
                     <th>Հասցե</th>
                     <th>Հեռախոս</th>
@@ -25,8 +24,14 @@
                 </thead>
                 <tbody>
                 <tr v-for="company in companies" :key="company.id">
-                    <td>{{ company.name }}</td>
-                    <td>{{ company.legal_name || 'N/A' }}</td>
+                    <td>
+                        <a href="#" @click.prevent="showCompanyContracts(company)" class="text-primary" style="cursor: pointer; text-decoration: underline;">
+                            {{ company.name }}
+                            <span v-if="company.contracts && company.contracts.length > 0" class="badge bg-info ms-1" style="font-size: 10px;">
+                                {{ company.contracts.length }}
+                            </span>
+                        </a>
+                    </td>
                     <td>{{ company.tax_id || 'N/A' }}</td>
                     <td>{{ company.address || 'N/A' }}</td>
                     <td>{{ company.phone || 'N/A' }}</td>
@@ -62,32 +67,42 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label">Անուն *</label>
-                                <input type="text" class="form-control" v-model="currentCompany.name" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Իրավաբանական անվանում</label>
-                                <input type="text" class="form-control" v-model="currentCompany.legal_name">
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.name}" v-model="currentCompany.name" required>
+                                <div class="invalid-feedback" v-if="errors.name">
+                                    {{ errors.name[0] }}
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">ՀՎՀՀ</label>
-                                <input type="text" class="form-control" v-model="currentCompany.tax_id">
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.tax_id}" v-model="currentCompany.tax_id">
+                                <div class="invalid-feedback" v-if="errors.tax_id">
+                                    {{ errors.tax_id[0] }}
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Հասցե</label>
-                                <input type="text" class="form-control" v-model="currentCompany.address">
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.address}" v-model="currentCompany.address">
+                                <div class="invalid-feedback" v-if="errors.address">
+                                    {{ errors.address[0] }}
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Հեռախոս</label>
-                                <input type="text" class="form-control" v-model="currentCompany.phone">
+                                <input type="text" class="form-control" :class="{'is-invalid': errors.phone}" v-model="currentCompany.phone">
+                                <div class="invalid-feedback" v-if="errors.phone">
+                                    {{ errors.phone[0] }}
+                                </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Էլ․ Փոստ)</label>
-                                <input type="email" class="form-control" v-model="currentCompany.email">
+                                <label class="form-label">Էլ․ Փոստ</label>
+                                <input type="email" class="form-control" :class="{'is-invalid': errors.email}" v-model="currentCompany.email">
+                                <div class="invalid-feedback" v-if="errors.email">
+                                    {{ errors.email[0] }}
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -105,20 +120,38 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Contracts Modal -->
+            <contracts-modal
+                :show="showContractsModal"
+                :title="selectedCompany?.name || ''"
+                :contracts="companyContracts"
+                @close="closeContractsModal"
+            />
         </div>
     </div>
 </template>
 
 <script>
+
+import Swal from 'sweetalert2';
+import ContractsModal from '../Shared/ContractsModal.vue';
+
 export default {
+    components: {
+        ContractsModal
+    },
     data() {
         return {
             companies: [],
             showCreateModal: false,
+            showContractsModal: false,
             isEditing: false,
+            errors: {},
+            selectedCompany: null,
+            companyContracts: [],
             currentCompany: {
                 name: '',
-                legal_name: '',
                 tax_id: '',
                 address: '',
                 phone: '',
@@ -133,7 +166,7 @@ export default {
     methods: {
         async fetchCompanies() {
             try {
-                const response = await axios.get('/api/own-companies');
+                const response = await axios.get('/api/own-companies?with_contracts=1');
                 this.companies = response.data.data;
             } catch (error) {
                 console.error('Error fetching own companies:', error);
@@ -154,36 +187,83 @@ export default {
                 }
                 this.fetchCompanies();
                 this.closeModal();
-                alert(this.isEditing ? 'Own company updated successfully' : 'Own company created successfully');
+                Swal.fire({
+                    icon: 'success',
+                    title: this.isEditing ? 'Մեր ընկերությունը հաջողությամբ թարմացվեց' : 'Մեր ընկերությունը հաջողությամբ ստեղծվեց',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
+                this.isEditing = false;
+
             } catch (error) {
                 console.error('Error saving own company:', error);
-                alert('Failed to save own company: ' + (error.response?.data?.message || error.message));
+
+                if (error.response && error.response.status === 422) {
+                    this.errors = error.response.data.errors || {};
+                } else {
+                    alert('Չհաջողվեց պահպանել մեր ընկերությունը: ' + (error.response?.data?.message || error.message));
+                }
             }
         },
         async deleteCompany(id) {
-            if (confirm('Are you sure you want to delete this own company?')) {
-                try {
+            try {
+                // Показываем подтверждение
+                const result = await Swal.fire({
+                    title: 'Դուք համոզված ե՞ք',
+                    text: "Այս գործողությունը հնարավոր է հետ վերադարձնել չի լինի!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Այո, ջնջել',
+                    cancelButtonText: 'Չեղարկել'
+                });
+
+                if (result.isConfirmed) {
                     await axios.delete(`/api/own-companies/${id}`);
                     this.fetchCompanies();
-                    alert('Own company deleted successfully');
-                } catch (error) {
-                    console.error('Error deleting own company:', error);
-                    alert('Failed to delete own company');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Մեր ընկերությունը հաջողությամբ ջնջվեց',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
                 }
+            } catch (error) {
+                console.error('Error deleting own company:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Չհաջողվեց ջնջել ընկերությունը',
+                    text: error.response?.data?.message || error.message
+                });
             }
         },
         closeModal() {
             this.showCreateModal = false;
-            this.isEditing = false;
+            this.errors = {};
             this.currentCompany = {
                 name: '',
-                legal_name: '',
                 tax_id: '',
                 address: '',
                 phone: '',
                 email: '',
                 is_active: true
             };
+        },
+        showCompanyContracts(company) {
+            this.selectedCompany = company;
+            this.companyContracts = company.contracts || [];
+            this.showContractsModal = true;
+        },
+        closeContractsModal() {
+            this.showContractsModal = false;
+            this.selectedCompany = null;
+            this.companyContracts = [];
         }
     }
 };

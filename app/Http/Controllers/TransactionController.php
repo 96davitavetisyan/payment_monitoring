@@ -38,7 +38,7 @@ class TransactionController extends Controller
     {
         $request->validate([
             'contract_id' => 'required|exists:contracts,id',
-            'invoice_number' => 'required|string|unique:transactions,invoice_number',
+            'invoice_number' => 'required|numeric',
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after:invoice_date',
             'amount' => 'required|numeric|min:0',
@@ -227,7 +227,7 @@ class TransactionController extends Controller
 //                $message->to('test@example.com')->subject('Test email');
 //            });
 
-            $transaction->update(['notified_at' => now()]);
+            $transaction->update(['notified_at' => now(),'payment_status'=>'notified']);
 
             return response()->json([
                 'success' => true,
@@ -244,24 +244,17 @@ class TransactionController extends Controller
 
     public function destroy(Transaction $transaction)
     {
-        if (!auth()->user()->can('delete_transactions')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+//        if (!auth()->user()->can('delete_transactions')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
 
         try {
-            foreach ($transaction->files as $file) {
-                Storage::delete($file->file_path);
-                $file->delete();
-            }
-
-            $oldValues = $transaction->toArray();
             $transaction->delete();
-
-            $this->logActivity('delete', $transaction, $oldValues, null);
+            $this->logActivity('soft_delete', $transaction, $transaction->toArray(), null);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction deleted successfully'
+                'message' => 'Transaction soft deleted successfully'
             ]);
         } catch (\Exception $e) {
             return response()->json([

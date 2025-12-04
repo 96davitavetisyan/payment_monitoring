@@ -28,7 +28,7 @@
                             <strong>Ապրանք:</strong> {{ contract.product?.name }}
                         </div>
                         <div class="col-md-3">
-                            <strong>Վճարում:</strong> {{ contract.payment_type === 'monthly' ? 'Ամենամյա' : ('one_time' ? 'Միանվագ' : 'Տարեկան') }}
+                            <strong>Վճարում:</strong> {{ contract.payment_type === 'monthly' ? 'Ամենամյա' : (contract.payment_type === 'one_time' ? 'Միանվագ' : 'Տարեկան') }}
                         </div>
                     </div>
                 </div>
@@ -44,6 +44,7 @@
                         <th style="width: 110px;">Վերջնաժամկետ</th>
                         <th style="width: 120px;">Գումար</th>
                         <th style="width: 90px;">Կարգավիճակ</th>
+                        <th style="width: 90px;">Երբ է ծանուցվել</th>
                         <th style="width: 100px;">Երբ է վճարվել</th>
                         <th style="width: 100px;">Ֆայլեր</th>
                         <th style="width: 180px;">Գործողություններ</th>
@@ -52,15 +53,16 @@
                     <tbody>
                     <tr v-for="transaction in transactions" :key="transaction.id">
                         <td class="small">{{ transaction.invoice_number }}</td>
-                        <td class="small">{{ formatDateShort(transaction.invoice_date) }}</td>
-                        <td class="small">{{ formatDateShort(transaction.due_date) }}</td>
+                        <td class="small">{{ formatDate(transaction.invoice_date) }}</td>
+                        <td class="small">{{ formatDate(transaction.due_date) }}</td>
                         <td class="small">{{ formatAmount(transaction.amount) }}</td>
                         <td>
                             <span class="badge" :class="getStatusClass(transaction.payment_status)" style="font-size: 10px;">
                                 {{ getStatusLabel(transaction.payment_status) }}
                             </span>
                         </td>
-                        <td class="small">{{ formatDateShort(transaction.paid_date) || '-' }}</td>
+                        <td class="small">{{ formatDate(transaction.notified_at) || '-' }}</td>
+                        <td class="small">{{ formatDate(transaction.paid_date) || '-' }}</td>
                         <td>
                             <div v-if="transaction.files.length">
                                 <button v-for="file in transaction.files" :key="file.id"
@@ -96,7 +98,7 @@
                         </td>
                     </tr>
                     <tr v-if="transactions.length === 0">
-                        <td colspan="7" class="text-center">Տվյալներ չկան</td>
+                        <td colspan="9" class="text-center">Տվյալներ չկան</td>
                     </tr>
                     </tbody>
                 </table>
@@ -112,8 +114,8 @@
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label class="form-label">Հաշիվ #</label>
-                                <input type="text" class="form-control" v-model="invoiceNumber" required>
+                                <label class="form-label">Հաշվեհամար</label>
+                                <input type="text" class="form-control" v-model="currentTransaction.invoice_number" required>
                             </div>
 
 
@@ -135,16 +137,20 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Վճարման ամսաթիվ</label>
-                                <input type="date" class="form-control" v-model="invoiceDate" required>
+<!--                                <date-picker v-model="currentTransaction.invoice_date" valueType="format" type="date"></date-picker>-->
+                                <DatePicker class="w-100" v-model="currentTransaction.invoice_date" format="DD-MM-YYYY" placeholder="Ընտրել" value-type="format"/>
+<!--                                <input type="date" class="form-control" v-model="currentTransaction.invoice_date" required>-->
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Վերջնաժամկետ</label>
-                                <input type="date" class="form-control" v-model="invoiceFinishDate" required>
+<!--                                <input type="date" class="form-control" v-model="currentTransaction.paid_date" required>-->
+                                <DatePicker class="w-100" v-model="currentTransaction.due_date" format="DD-MM-YYYY" placeholder="Ընտրել" value-type="format"/>
                             </div>
                             <div class="mb-3" v-if = "isEditing">
                                 <label class="form-label">Երբ է վճարվել</label>
-                                <input type="date" class="form-control" v-model="currentTransaction.paid_date">
+                                <DatePicker class="w-100" v-model="currentTransaction.paid_date" format="DD-MM-YYYY" placeholder="Ընտրել" value-type="format"/>
+<!--                                <input type="date" class="form-control" v-model="currentTransaction.paid_date">-->
                             </div>
 
                             <div class="mb-3">
@@ -204,7 +210,9 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label">Երբ է վճարվել</label>
-                                <input type="date" class="form-control" v-model="paidFileTransaction.paid_date" required>
+<!--                                <input type="date" class="form-control" v-model="paidFileTransactionDate" required>-->
+
+                                <DatePicker class="w-100" v-model="paidFileTransaction.paid_date" format="DD-MM-YYYY" placeholder="Ընտրել" value-type="format" required/>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Ընտրել ֆայլ</label>
@@ -224,7 +232,12 @@
 
 <script>
 import Swal from 'sweetalert2';
+import dateMixin from '../../mixins/dateMixin';
+import DatePicker from 'vue2-datepicker';
+
 export default {
+    mixins: [dateMixin],
+    components: { DatePicker },
     data() {
         return {
             contractId: null,
@@ -244,7 +257,8 @@ export default {
                 amount: '',
                 payment_status: 'pending',
                 paid_date: '',
-                notes: ''
+                notified_at: '',
+                notes: '',
             },
 
             showPaidFileModal: false,
@@ -254,47 +268,26 @@ export default {
     },
     mounted() {
         this.contractId = this.$route.params.contractId;
-        if (this.contractId) {
-            this.fetchContract();
-            this.fetchTransactions();
-        }
+        this.fetchContract();
+        this.fetchTransactions();
     },
     computed: {
-        invoiceNumber: {
+
+        transactionPaidDate: {
             get() {
-                return this.currentTransaction?.invoice_number !== '' ?this.currentTransaction?.invoice_number:  this.contract.account_number;
+                return this.toInputDate(this.currentTransaction.paid_date);
             },
             set(value) {
-                if (this.currentTransaction) {
-                    this.currentTransaction.invoice_number = value;
-                } else {
-                    this.contract.invoice_number = value;
-                }
+                this.currentTransaction.paid_date = value;
             }
         },
-        invoiceDate: {
+        paidFileTransactionDate: {
             get() {
-                return this.currentTransaction?.invoice_date !== '' ? this.currentTransaction?.invoice_date:  this.formatPaymentDate(this.contract.payment_date);
+                return this.toInputDate(this.paidFileTransaction?.paid_date);
             },
             set(value) {
-
-                if (this.currentTransaction) {
-                    this.currentTransaction.invoice_date = value;
-                } else {
-                    this.contract.payment_date = value;
-                }
-            }
-        },
-        invoiceFinishDate: {
-            get() {
-                return this.currentTransaction?.due_date !== '' ? this.currentTransaction?.due_date:  this.formatPaymentDate(this.contract.payment_finish_date);
-            },
-            set(value) {
-
-                if (this.currentTransaction) {
-                    this.currentTransaction.due_date = value;
-                } else {
-                    this.contract.payment_finish_date = value;
+                if (this.paidFileTransaction) {
+                    this.paidFileTransaction.paid_date = value;
                 }
             }
         }
@@ -345,10 +338,10 @@ export default {
         openCreateModal() {
             this.currentTransaction = {
                 contract_id: this.contractId,
-                invoice_number: '',
-                invoice_date: '',
-                due_date: '',
-                amount: '',
+                invoice_number: this.currentTransaction?.invoice_number !== '' ? this.currentTransaction?.invoice_number : this.contract.account_number,
+                invoice_date: this.currentTransaction?.invoice_date !== '' ? `25-03-2025` : this.formatPaymentDate(this.contract.payment_date),
+                due_date: this.currentTransaction?.paid_date !== '' ? this.currentTransaction?.paid_date : this.formatPaymentDate(this.contract.payment_finish_date),
+                amount: this.currentTransaction?.amount !== '' ? this.currentTransaction?.amount : this.contract.payment_amount,
                 payment_status: 'pending',
                 paid_date: '',
                 notes: ''
@@ -357,7 +350,18 @@ export default {
             this.showModal = true;
         },
         editTransaction(transaction) {
-            this.currentTransaction = { ...transaction };
+            let transactionCopy = { ...transaction };
+
+            if (transactionCopy.invoice_date) {
+                transactionCopy.invoice_date = this.formatDate(transactionCopy.invoice_date);
+            }
+            if (transactionCopy.due_date) {
+                transactionCopy.due_date = this.formatDate(transactionCopy.due_date);
+            }
+            if (transactionCopy.paid_date) {
+                transactionCopy.paid_date = this.formatDate(transactionCopy.paid_date);
+            }
+            this.currentTransaction = transactionCopy;
             this.isEditing = true;
             this.showModal = true;
         },
@@ -572,13 +576,6 @@ export default {
                 maximumFractionDigits: 0
             }).format(amount) + ' ֏';
         },
-        formatDateShort(date) {
-            if (!date) return null;
-            const d = new Date(date);
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${day}-${month}-${d.getFullYear()}`;
-        },
         getStatusClass(status) {
             const classes = {
                 'pending': 'bg-warning text-dark',
@@ -595,7 +592,8 @@ export default {
                 'paid': 'Վճարված',
                 'late': 'Ուշացած',
                 'overdue': 'Ժամկետանց',
-                'cancelled': 'Չեղարկված է'
+                'cancelled': 'Չեղարկված է',
+                'notified': 'Ծանուցված',
             };
             return labels[status] || status;
         },
