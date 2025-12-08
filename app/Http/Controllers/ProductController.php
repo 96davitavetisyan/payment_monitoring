@@ -20,7 +20,7 @@ class ProductController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $query = Product::with('responsibleUser');
+        $query = Product::query();
 
         if ($request->has('with_contracts')) {
             $query->with(['contracts' => function($q) {
@@ -49,7 +49,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product created',
-            'data' => $product->load('responsibleUser')
+            'data' => $product
         ], 201);
     }
 
@@ -61,13 +61,13 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        if (!auth()->user()->can('view_all_products') && $product->responsible_user_id !== auth()->id()) {
+        if (!auth()->user()->can('view_all_products')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $product->load('responsibleUser')
+            'data' => $product
         ]);
     }
 
@@ -85,7 +85,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product updated',
-            'data' => $product->fresh()->load('responsibleUser')
+            'data' => $product->fresh()
         ]);
     }
 

@@ -4,7 +4,7 @@
             <span class="navbar-brand">Վճարումների մոնիթորինգ</span>
             <div class="navbar-nav me-auto">
                 <router-link to="/products" class="nav-link text-white" active-class="fw-bold">
-                    Ապրանքներ
+                    Պրոդուկտներ
                 </router-link>
                 <router-link to="/partner-companies" class="nav-link text-white" active-class="fw-bold">
                     Գործընկերներ
@@ -14,6 +14,12 @@
                 </router-link>
                 <router-link to="/contracts" class="nav-link text-white" active-class="fw-bold">
                     Պայմանագրեր
+                </router-link>
+                <router-link to="/payment-statistics" class="nav-link text-white" active-class="fw-bold">
+                     Վիճակագրություն
+                </router-link>
+                <router-link to="/user-manager" class="nav-link text-white" active-class="fw-bold">
+                    Օգտատերեր
                 </router-link>
             </div>
             <div class="d-flex align-items-center">

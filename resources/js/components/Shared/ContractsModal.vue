@@ -1,5 +1,5 @@
 <template>
-    <div class="modal" tabindex="-1" :class="{ 'show d-block': show }" style="background: rgba(0,0,0,0.5);" v-if="show">
+    <div class="modal" tabindex="-1" :class="{ 'show d-block': show }" style="background: rgba(0,0,0,0.5);" v-if="show" @click.self="$emit('close')">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
@@ -21,7 +21,7 @@
                                     <th>Համար</th>
                                     <th>Գործընկեր</th>
                                     <th>Մեր ընկերություն</th>
-                                    <th>Ապրանք</th>
+                                    <th>Պրոդուկտ</th>
                                     <th>Սկիզբ</th>
                                     <th>Ավարտ</th>
                                     <th>Տեսակ</th>
@@ -32,9 +32,9 @@
                             <tbody>
                                 <tr v-for="contract in contracts" :key="contract.id">
                                     <td>{{ contract.contract_number || '-' }}</td>
-                                    <td>{{ contract.partner_company?.name || '-' }}</td>
-                                    <td>{{ contract.own_company?.name || '-' }}</td>
-                                    <td>{{ contract.product?.name || '-' }}</td>
+                                    <td>{{ contract.partner_company?.name || title }}</td>
+                                    <td>{{ contract.own_company?.name || title }}</td>
+                                    <td>{{ contract.product?.name || title }}</td>
                                     <td>{{ formatDate(contract.contract_start_date) }}</td>
                                     <td>{{ formatDate(contract.contract_end_date) || '-' }}</td>
                                     <td>
@@ -81,6 +81,7 @@ export default {
             default: () => []
         }
     },
+
     methods: {
         formatAmount(amount) {
             return new Intl.NumberFormat('en-US', {
@@ -119,8 +120,8 @@ export default {
 </script>
 
 <style scoped>
-.table-sm th, .table-sm td {
-    padding: 0.4rem;
-    font-size: 0.875rem;
-}
+    .table-sm th, .table-sm td {
+        padding: 0.4rem;
+        font-size: 0.875rem;
+    }
 </style>

@@ -25,7 +25,7 @@
                             <strong>Մեր ընկերություն:</strong> {{ contract.own_company?.name }}
                         </div>
                         <div class="col-md-3">
-                            <strong>Ապրանք:</strong> {{ contract.product?.name }}
+                            <strong>Պրոդուկտ:</strong> {{ contract.product?.name }}
                         </div>
                         <div class="col-md-3">
                             <strong>Վճարում:</strong> {{ contract.payment_type === 'monthly' ? 'Ամենամյա' : (contract.payment_type === 'one_time' ? 'Միանվագ' : 'Տարեկան') }}
@@ -105,7 +105,7 @@
             </div>
 
             <!-- Create/Edit Modal -->
-            <div class="modal" tabindex="-1" :class="{ 'show d-block': showModal }" style="background: rgba(0,0,0,0.5);" v-if="showModal">
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showModal }" style="background: rgba(0,0,0,0.5);" v-if="showModal" @click.self="closeModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -167,7 +167,7 @@
             </div>
 
             <!-- File Upload Modal -->
-            <div class="modal" tabindex="-1" :class="{ 'show d-block': showFileModal }" style="background: rgba(0,0,0,0.5);" v-if="showFileModal">
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showFileModal }" style="background: rgba(0,0,0,0.5);" v-if="showFileModal" @click.self="closeFileModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -200,7 +200,7 @@
                 </div>
             </div>
 
-            <div class="modal" tabindex="-1" :class="{ 'show d-block': showPaidFileModal }" style="background: rgba(0,0,0,0.5);" v-if="showPaidFileModal">
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showPaidFileModal }" style="background: rgba(0,0,0,0.5);" v-if="showPaidFileModal" @click.self="closePaidFileModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -379,8 +379,14 @@ export default {
                 Swal.fire({
                     icon: 'success',
                     title: this.isEditing ? 'Գործարքը թարմացվեց' : 'Գործարքը ստեղծվեց',
-                    showConfirmButton: true
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    timerProgressBar: true
                 });
+
+                this.isEditing = false;
             } catch (error) {
                 console.error('Error saving transaction:', error);
                 Swal.fire({
@@ -397,7 +403,8 @@ export default {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Ջնջել',
-                cancelButtonText: 'Չեղարկել'
+                cancelButtonText: 'Չեղարկել',
+                confirmButtonColor: '#d33'
             });
 
             if (result.isConfirmed) {
@@ -408,6 +415,11 @@ export default {
                         icon: 'success',
                         title: 'Ջնջված է',
                         text: 'Գործարքը հաջողությամբ ջնջվել է',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        timerProgressBar: true
                     });
                 } catch (error) {
                     console.error('Error deleting transaction:', error);
@@ -455,7 +467,11 @@ export default {
                 Swal.fire({
                     icon: 'success',
                     title: 'Ֆայլերը հաջողությամբ վերբեռնվել են',
-                    showConfirmButton: true,
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    timerProgressBar: true
                 });
 
                 this.closeFileModal();
@@ -475,7 +491,8 @@ export default {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Ջնջել',
-                cancelButtonText: 'Չեղարկել'
+                cancelButtonText: 'Չեղարկել',
+                confirmButtonColor: '#d33'
             });
 
             if (result.isConfirmed) {
@@ -549,7 +566,6 @@ export default {
         },
         closeModal() {
             this.showModal = false;
-            this.isEditing = false;
             this.currentTransaction = {
                 contract_id: this.contractId,
                 invoice_number: '',
@@ -633,6 +649,11 @@ export default {
                     icon: 'success',
                     title: 'Պահպանվել է',
                     text: 'Վճարման ամսաթիվը և ֆայլը հաջողությամբ պահպանվել են',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    timerProgressBar: true
                 });
 
                 this.fetchTransactions(); // обновляем таблицу

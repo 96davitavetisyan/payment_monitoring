@@ -16,7 +16,7 @@ class AuthController extends Controller
         ]);
 
         if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json(['message' => 'Անվավեր մուտքի տվյալներ'], 401);
         }
 
         $user = $request->user();
@@ -52,7 +52,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $user->load('roles.permissions');
-        
+
         $permissions = $user->getAllPermissions()->pluck('name')->unique()->values();
         $roles = $user->roles->pluck('name');
 

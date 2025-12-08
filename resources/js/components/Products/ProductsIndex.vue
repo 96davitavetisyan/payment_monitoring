@@ -3,7 +3,7 @@
         <app-header></app-header>
         <div class="container mt-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1>Ապրանքներ</h1>
+                <h1>Պրոդուկտներ</h1>
                 <button class="btn btn-success" @click="showCreateModal = true">
                     + Ավելացնել
                 </button>
@@ -15,7 +15,6 @@
                 <tr>
                     <th>ID</th>
                     <th>Անուն</th>
-                    <th>Պատասխանատու</th>
                     <th>Կարգավիճակ</th>
                     <th>Ստեղծվել է</th>
                     <th>Գործողություններ</th>
@@ -32,7 +31,6 @@
                                 </span>
                             </a>
                         </td>
-                        <td>{{ product.responsible_user.name }}</td>
                         <td>
                             <span class="badge" :class="getStatusClass(product.status)">
                                 {{ product.status === 'active' ? 'Ակտիվ' : 'Կասեցված' }}
@@ -49,17 +47,17 @@
                         </td>
                     </tr>
                     <tr v-if="products.length === 0">
-                        <td colspan="7" class="text-center">No products found</td>
+                        <td colspan="5" class="text-center">No products found</td>
                     </tr>
                 </tbody>
             </table>
 
             <!-- Create/Edit Modal -->
-            <div class="modal" tabindex="-1" :class="{ 'show d-block': showCreateModal }" style="background: rgba(0,0,0,0.5);" v-if="showCreateModal">
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showCreateModal }" style="background: rgba(0,0,0,0.5);" v-if="showCreateModal" @click.self="closeModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">{{ isEditing ? 'Խմբագրել' : 'Ավելացնել' }} Ապրանք</h5>
+                            <h5 class="modal-title">{{ isEditing ? 'Խմբագրել' : 'Ավելացնել' }} Պրոդուկտ</h5>
                             <button type="button" class="btn-close" @click="closeModal"></button>
                         </div>
                         <div class="modal-body">
@@ -68,19 +66,6 @@
                                 <input type="text" class="form-control" :class="{'is-invalid': errors.name}" v-model="currentProduct.name" required>
                                 <div class="invalid-feedback" v-if="errors.name">
                                     {{ errors.name[0] }}
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Պատասխանատու *</label>
-                                <select class="form-select" :class="{'is-invalid': errors.responsible_user_id}" v-model="currentProduct.responsible_user_id" required>
-                                    <option value="">Ընտրել</option>
-                                    <option v-for="user in users" :key="user.id" :value="user.id">
-                                        {{ user.name }}
-                                    </option>
-                                </select>
-                                <div class="invalid-feedback" v-if="errors.responsible_user_id">
-                                    {{ errors.responsible_user_id[0] }}
                                 </div>
                             </div>
 
@@ -129,7 +114,6 @@ export default {
     data() {
         return {
             products: [],
-            users: [],
             showContractsModal: false,
             showCreateModal: false,
             selectedProduct: null,
@@ -138,14 +122,12 @@ export default {
             errors: {},
             currentProduct: {
                 name: '',
-                responsible_user_id: '',
                 status: 'active'
             }
         };
     },
     mounted() {
         this.fetchProducts();
-        this.fetchUsers();
     },
     methods: {
         async fetchProducts() {
@@ -177,20 +159,10 @@ export default {
             this.selectedProduct = null;
             this.productContracts = [];
         },
-        async fetchUsers() {
-            try {
-                const response = await axios.get('/api/users');
-                this.users = response.data.data || response.data;
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                alert('Չհաջողվեց բեռնել օգտատերերի ցանկը');
-            }
-        },
         editProduct(product) {
             this.currentProduct = {
                 id: product.id,
                 name: product.name,
-                responsible_user_id: product.responsible_user_id,
                 status: product.status
             };
             this.isEditing = true;
@@ -208,7 +180,7 @@ export default {
                 this.closeModal();
                 Swal.fire({
                     icon: 'success',
-                    title: this.isEditing ? 'Ապրանքը հաջողությամբ թարմացվեց' : 'Ապրանքը հաջողությամբ ստեղծվեց',
+                    title: this.isEditing ? 'Պրոդուկտը հաջողությամբ թարմացվեց' : 'Պրոդուկտը հաջողությամբ ստեղծվեց',
                     toast: true,
                     position: 'top-end',
                     timer: 2000,
@@ -236,7 +208,7 @@ export default {
                 } else {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Չհաջողվեց պահպանել ապրանքը',
+                        title: 'Չհաջողվեց պահպանել պրոդուկտը',
                         text: error.response?.data?.message || error.message,
                         toast: true,
                         position: 'top-end',
@@ -255,7 +227,8 @@ export default {
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Այո, ջնջել',
-                    cancelButtonText: 'Չեղարկել'
+                    cancelButtonText: 'Չեղարկել',
+                    confirmButtonColor: '#d33',
                 });
 
                 if (result.isConfirmed) {
@@ -264,7 +237,7 @@ export default {
 
                     Swal.fire({
                         icon: 'success',
-                        title: 'Ապրանքը հաջողությամբ ջնջվեց',
+                        title: 'Պրոդուկտը հաջողությամբ ջնջվեց',
                         toast: true,
                         position: 'top-end',
                         timer: 2000,
@@ -276,7 +249,7 @@ export default {
                 console.error('Error deleting product:', error);
                 Swal.fire({
                     icon: 'error',
-                    title: 'Չհաջողվեց ջնջել ապրանքը',
+                    title: 'Չհաջողվեց ջնջել պրոդուկտը',
                     text: error.response?.data?.message || error.message,
                     toast: true,
                     position: 'top-end',
@@ -291,7 +264,6 @@ export default {
             this.errors = {};
             this.currentProduct = {
                 name: '',
-                responsible_user_id: '',
                 status: 'active'
             };
         }

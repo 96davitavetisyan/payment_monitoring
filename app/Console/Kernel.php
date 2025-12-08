@@ -17,6 +17,9 @@ class Kernel extends ConsoleKernel
     {
         // Generate monthly invoices on the 1st of each month at 00:01
         $schedule->command('invoices:generate-monthly')->monthlyOn(1, '00:01');
+
+        // Check transaction statuses daily at 23:55 (end of day)
+        $schedule->command('transactions:check-status')->dailyAt('23:55');
     }
 
     /**

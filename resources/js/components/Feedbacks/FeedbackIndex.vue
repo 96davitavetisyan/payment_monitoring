@@ -54,7 +54,7 @@
             </div>
 
             <!-- Feedback Modal -->
-            <div v-if="showModal" class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div v-if="showModal" class="modal show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);" @click.self="closeModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">

@@ -65,4 +65,12 @@ class Contract extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /**
+     * Get users assigned to this contract
+     */
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'contract_user');
+    }
 }

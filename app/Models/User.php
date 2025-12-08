@@ -42,4 +42,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Get contracts assigned to this user
+     */
+    public function contracts()
+    {
+        return $this->belongsToMany(Contract::class, 'contract_user');
+    }
 }

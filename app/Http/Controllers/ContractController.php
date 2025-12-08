@@ -14,9 +14,25 @@ class ContractController extends Controller
 
     public function index()
     {
-        $contracts = Contract::with(['partnerCompany', 'ownCompany', 'product'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $user = auth()->user();
+
+        $query = Contract::with([
+                'partnerCompany',
+                'ownCompany',
+                'product',
+                'transactions' => function($query) {
+                    $query->orderBy('created_at', 'desc');
+                }
+            ]);
+
+        // If user is not super-admin, show only assigned contracts
+        if (!$user->hasRole('super-admin')) {
+            $query->whereHas('users', function($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
+
+        $contracts = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'success' => true,

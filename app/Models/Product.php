@@ -15,21 +15,12 @@ class Product extends Model
     protected $fillable = [
         'name',
         'start_date',
-        'responsible_user_id',
         'status'
     ];
 
     protected $casts = [
         'start_date' => 'date',
     ];
-
-    /**
-     * Get the responsible user for this product
-     */
-    public function responsibleUser()
-    {
-        return $this->belongsTo(User::class, 'responsible_user_id');
-    }
 
     /**
      * Get the contracts for this product
@@ -45,14 +36,6 @@ class Product extends Model
     public function feedbacks()
     {
         return $this->hasMany(Feedback::class, 'project_id');
-    }
-
-    /**
-     * Scope to filter products for a specific user
-     */
-    public function scopeForUser($query, $userId)
-    {
-        return $query->where('responsible_user_id', $userId);
     }
 
     /**

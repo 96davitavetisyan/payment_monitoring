@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\UserManagementController;
 
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -56,8 +57,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/transactions/{transaction}/paid-file', [TransactionController::class, 'updatePaidFile']);
     Route::get('/transaction-files/download/{file}', [TransactionController::class, 'downloadFile']);
 
+    // Payment Statistics
+    Route::get('payment-statistics', [App\Http\Controllers\PaymentStatisticsController::class, 'index']);
+
     // Users
     Route::get('/users', [UserController::class, 'index']);
+
+
+    // Contracts
+    Route::get('user-management', [UserManagementController::class, 'index']);
+    Route::post('user-management', [UserManagementController::class, 'store']);
+    Route::get('user-management/{currentUser}', [UserManagementController::class, 'show']);
+    Route::put('user-management/{currentUser}', [UserManagementController::class, 'update']);
+    Route::delete('user-management/{currentUser}', [UserManagementController::class, 'destroy']);
+    Route::get('roles', [UserManagementController::class, 'getRoles']);
+
 });
 
 

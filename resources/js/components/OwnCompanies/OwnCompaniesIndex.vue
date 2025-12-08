@@ -57,7 +57,7 @@
             </table>
 
             <!-- Create/Edit Modal -->
-            <div class="modal" tabindex="-1" :class="{ 'show d-block': showCreateModal }" style="background: rgba(0,0,0,0.5);" v-if="showCreateModal">
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showCreateModal }" style="background: rgba(0,0,0,0.5);" v-if="showCreateModal" @click.self="closeModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -210,14 +210,14 @@ export default {
         },
         async deleteCompany(id) {
             try {
-                // Показываем подтверждение
                 const result = await Swal.fire({
                     title: 'Դուք համոզված ե՞ք',
                     text: "Այս գործողությունը հնարավոր է հետ վերադարձնել չի լինի!",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Այո, ջնջել',
-                    cancelButtonText: 'Չեղարկել'
+                    cancelButtonText: 'Չեղարկել',
+                    confirmButtonColor: '#d33',
                 });
 
                 if (result.isConfirmed) {

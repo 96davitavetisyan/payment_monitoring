@@ -4,7 +4,7 @@
             <div class="col-md-4">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h3 class="card-title text-center mb-4">Login</h3>
+                        <h3 class="card-title text-center mb-4">Մուտք</h3>
                         <form @submit.prevent="login">
                             <div class="mb-3">
                                 <input
@@ -15,17 +15,24 @@
                                     required
                                 >
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3 position-relative">
                                 <input
-                                    type="password"
+                                    :type="showPassword ? 'text' : 'password'"
                                     v-model="password"
                                     class="form-control"
                                     placeholder="Password"
                                     required
                                 >
+                                <span
+                                    @click="togglePassword"
+                                    class="position-absolute"
+                                    style="right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;"
+                                >
+                                    <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </span>
                             </div>
                             <button type="submit" class="btn btn-primary w-100" :disabled="loading">
-                                {{ loading ? 'Logging in...' : 'Login' }}
+                                {{ loading ? 'Logging in...' : 'Մուտք' }}
                             </button>
                             <div v-if="error" class="alert alert-danger mt-3" role="alert">
                                 {{ error }}
@@ -48,10 +55,14 @@ export default {
             email: '',
             password: '',
             error: null,
-            loading: false
+            loading: false,
+            showPassword: false
         }
     },
     methods: {
+        togglePassword() {
+            this.showPassword = !this.showPassword;
+        },
         async login() {
             this.loading = true;
             this.error = null;

@@ -43,7 +43,7 @@ class UpdateContractRequest extends FormRequest
             'payment_amount' => 'sometimes|required|numeric|min:0',
             'account_number' => 'required|numeric|min:0',
             'status' => 'sometimes|in:active,completed,cancelled,suspended',
-            'contract_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'contract_file' => 'nullable|file|mimes:pdf|max:10240',
             'notes' => 'nullable|string',
 
             'payment_date' => [
@@ -84,8 +84,8 @@ class UpdateContractRequest extends FormRequest
             'partner_company_id.exists' => 'Ընտրված գործընկեր ընկերությունը գոյություն չունի',
             'own_company_id.required' => 'Սեփական ընկերությունը պարտադիր է',
             'own_company_id.exists' => 'Ընտրված սեփական ընկերությունը գոյություն չունի',
-            'product_id.required' => 'Ապրանքը պարտադիր է',
-            'product_id.exists' => 'Ընտրված ապրանքը գոյություն չունի',
+            'product_id.required' => 'Պրոդուկտը պարտադիր է',
+            'product_id.exists' => 'Ընտրված պրոդուկտը գոյություն չունի',
             'contract_number.unique' => 'Այս համարով պայմանագիրը արդեն գոյություն ունի',
             'contract_start_date.required' => 'Պայմանագրի սկզբի ամսաթիվը պարտադիր է',
             'contract_end_date.after' => 'Պայմանագրի ավարտի ամսաթիվը պետք է լինի սկզբի ամսաթվից հետո',
@@ -99,7 +99,7 @@ class UpdateContractRequest extends FormRequest
             'payment_date.max' => 'Վճարման օրը պետք է լինի 31-ից փոքր կամ հավասար',
             'payment_finish_date.min' => 'Վճարման վերջնական օրը պետք է լինի 1-ից մեծ կամ հավասար',
             'payment_finish_date.max' => 'Վճարման վերջնական օրը պետք է լինի 31-ից փոքր կամ հավասար',
-            'contract_file.mimes' => 'Պայմանագրի ֆայլը պետք է լինի PDF, DOC կամ DOCX ձևաչափով',
+            'contract_file.mimes' => 'Պայմանագրի ֆայլը պետք է լինի միայն PDF ձևաչափով',
             'contract_file.max' => 'Պայմանագրի ֆայլի չափը չպետք է գերազանցի 10ՄԲ',
         ];
     }

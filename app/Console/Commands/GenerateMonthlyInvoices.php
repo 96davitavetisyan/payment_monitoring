@@ -32,31 +32,17 @@ class GenerateMonthlyInvoices extends Command
         $skipped = 0;
 
         foreach ($activeContracts as $contract) {
-            // Generate invoice number
-            $invoiceNumber = $this->generateInvoiceNumber($contract);
-
-            // Check if invoice already exists for this month
-            $exists = Transaction::where('contract_id', $contract->id)
-                ->where('invoice_number', $invoiceNumber)
-                ->exists();
-
-            if ($exists) {
-                $this->warn("Invoice {$invoiceNumber} already exists for contract {$contract->id}");
-                $skipped++;
-                continue;
-            }
-
             try {
                 Transaction::create([
                     'contract_id' => $contract->id,
-                    'invoice_number' => $invoiceNumber,
-                    'invoice_date' => now(),
-                    'due_date' => now()->addDays(30), // 30 days payment term
+                    'invoice_number' => $contract->account_number,
+                    'invoice_date' => $this->formatPaymentDate($contract->payment_date),
+                    'due_date' => $this->formatPaymentDate($contract->payment_finish_date),
                     'amount' => $contract->payment_amount,
                     'payment_status' => 'pending',
                 ]);
 
-                $this->info("Generated invoice {$invoiceNumber} for contract {$contract->id}");
+                $this->info("Generated invoice for contract {$contract->id}");
                 $generated++;
             } catch (\Exception $e) {
                 $this->error("Failed to generate invoice for contract {$contract->id}: " . $e->getMessage());
@@ -70,10 +56,17 @@ class GenerateMonthlyInvoices extends Command
         return 0;
     }
 
-    private function generateInvoiceNumber($contract)
+    private function formatPaymentDate($day)
     {
-        $date = now()->format('Ym');
-        $contractId = str_pad($contract->id, 4, '0', STR_PAD_LEFT);
-        return "INV-{$date}-{$contractId}";
+        if (!$day) {
+            return '-';
+        }
+        $today = Carbon::today();
+        $date = Carbon::create($today->year, $today->month, $day, 0, 0, 0);
+        if ($date->lt($today)) {
+            $date->addMonth();
+        }
+
+        return $date;
     }
 }

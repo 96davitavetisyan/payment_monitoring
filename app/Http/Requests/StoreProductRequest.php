@@ -26,7 +26,6 @@ class StoreProductRequest extends FormRequest
         return [
             'name' => 'required|string|max:255|unique:products,name',
             'start_date' => 'nullable|date',
-            'responsible_user_id' => 'required|exists:users,id',
             'status' => 'required|in:active,suspended',
         ];
     }
@@ -39,11 +38,9 @@ class StoreProductRequest extends FormRequest
     public function messages()
     {
         return [
-            'name.required' => 'Ապրանքի անունը պարտադիր է',
-            'name.unique' => 'Ապրանքի նման անուն արդեն գոյություն ունի',
-            'responsible_user_id.required' => 'Պատասխանատու օգտատերը պարտադիր է',
-            'responsible_user_id.exists' => 'Ընտրված օգտատերը գոյություն չունի',
-            'status.required' => 'Ապրանքի կարգավիճակը պարտադիր է',
+            'name.required' => 'Պրոդուկտի անունը պարտադիր է',
+            'name.unique' => 'Պրոդուկտի նման անուն արդեն գոյություն ունի',
+            'status.required' => 'Պրոդուկտի կարգավիճակը պարտադիր է',
         ];
     }
 }

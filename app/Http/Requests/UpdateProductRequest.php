@@ -34,7 +34,6 @@ class UpdateProductRequest extends FormRequest
                 Rule::unique('products', 'name')->ignore($product->id),
             ],
             'start_date' => 'nullable|date',
-            'responsible_user_id' => 'required|exists:users,id',
             'status' => 'required|in:active,suspended',
         ];
     }
@@ -47,11 +46,9 @@ class UpdateProductRequest extends FormRequest
     public function messages()
     {
         return [
-            'name.required' => 'Ապրանքի անունը պարտադիր է',
-            'name.unique' => 'Այս անունով ապրանք արդեն գոյություն ունի',
-            'responsible_user_id.required' => 'Պատասխանատու օգտատերը պարտադիր է',
-            'responsible_user_id.exists' => 'Ընտրված օգտատերը գոյություն չունի',
-            'status.required' => 'Ապրանքի կարգավիճակը պարտադիր է',
+            'name.required' => 'Պրոդուկտի անունը պարտադիր է',
+            'name.unique' => 'Այս անունով պրոդուկտ արդեն գոյություն ունի',
+            'status.required' => 'Պրոդուկտի կարգավիճակը պարտադիր է',
         ];
     }
 }

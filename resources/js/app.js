@@ -1,11 +1,17 @@
+
 require('./bootstrap');
 window.Vue = require('vue').default;
 import '@fortawesome/fontawesome-free/css/all.css';
 import '@fortawesome/fontawesome-free/js/all.js';
 import 'vue2-datepicker/index.css';
 
+import VueGoodTablePlugin from 'vue-good-table';
+import 'vue-good-table/dist/vue-good-table.css';
+
+Vue.use(VueGoodTablePlugin);
+
+
 import VueRouter from 'vue-router';
-import axios from 'axios';
 import auth from './auth';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -13,7 +19,6 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 Vue.use(VueRouter);
 
-// Make auth available globally in all components
 Vue.prototype.$auth = auth;
 
 import Header from './components/Layout/Header.vue';
@@ -23,6 +28,8 @@ import ProductsIndex from './components/Products/ProductsIndex.vue';
 import PartnerCompaniesIndex from './components/PartnerCompanies/PartnerCompaniesIndex.vue';
 import OwnCompaniesIndex from './components/OwnCompanies/OwnCompaniesIndex.vue';
 import ContractsIndex from './components/Contracts/ContractsIndex.vue';
+import PaymentStatistics from './components/Statistics/PaymentStatistics.vue';
+import UsersIndex from "./components/Users/UsersIndex.vue";
 import Login from './components/Auth/Login.vue';
 
 // Routes configuration
@@ -59,6 +66,18 @@ const routes = [
         component: TransactionsIndex,
         meta: { requiresAuth: true },
         name: 'contract-transactions'
+    },
+    {
+        path: '/payment-statistics',
+        component: PaymentStatistics,
+        meta: { requiresAuth: true },
+        name: 'payment-statistics'
+    },
+    {
+        path: '/user-manager',
+        component: UsersIndex,
+        meta: { requiresAuth: true },
+        name: 'payment-statistics'
     }
 ];
 
