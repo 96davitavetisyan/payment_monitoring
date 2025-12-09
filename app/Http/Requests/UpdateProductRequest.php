@@ -35,6 +35,8 @@ class UpdateProductRequest extends FormRequest
             ],
             'start_date' => 'nullable|date',
             'status' => 'required|in:active,suspended',
+            'own_company_id' => 'nullable|exists:own_companies,id',
+            'type' => 'required|in:local,international',
         ];
     }
 

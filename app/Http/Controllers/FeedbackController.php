@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
+use App\Models\Product;
 use App\Models\Feedback;
 use App\Http\Requests\StoreFeedbackRequest;
 use App\Http\Requests\UpdateFeedbackRequest;
@@ -11,18 +11,18 @@ use Illuminate\Http\Request;
 class FeedbackController extends Controller
 {
     /**
-     * Display a listing of feedbacks for a project.
+     * Display a listing of feedbacks for a product.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Project $project)
+    public function index(Product $product)
     {
         // Check permission
-        if (!auth()->user()->can('view_feedback')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+//        if (!auth()->user()->can('view_feedback')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
 
-        $feedbacks = $project->feedbacks()->with('accountManager')->latest()->get();
+        $feedbacks = $product->feedbacks()->with('accountManager')->latest()->get();
 
         return response()->json([
             'success' => true,
@@ -36,17 +36,17 @@ class FeedbackController extends Controller
      * @param  \App\Http\Requests\StoreFeedbackRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StoreFeedbackRequest $request, Project $project)
+    public function store(StoreFeedbackRequest $request, Product $product)
     {
         $data = $request->validated();
         $data['account_manager_id'] = auth()->id();
 
         // Handle file upload
         if ($request->hasFile('file')) {
-            $data['file_path'] = $request->file('file')->store('feedbacks');
+            $data['file_path'] = $request->file('file')->store('feedbacks', 'public');
         }
 
-        $feedback = $project->feedbacks()->create($data);
+        $feedback = $product->feedbacks()->create($data);
 
         return response()->json([
             'success' => true,
@@ -59,17 +59,17 @@ class FeedbackController extends Controller
      * Update the specified feedback in storage.
      *
      * @param  \App\Http\Requests\UpdateFeedbackRequest  $request
-     * @param  Project  $project
+     * @param  Product  $product
      * @param  Feedback  $feedback
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateFeedbackRequest $request, Project $project, Feedback $feedback)
+    public function update(UpdateFeedbackRequest $request, Product $product, Feedback $feedback)
     {
         $data = $request->validated();
 
         // Handle file upload
         if ($request->hasFile('file')) {
-            $data['file_path'] = $request->file('file')->store('feedbacks');
+            $data['file_path'] = $request->file('file')->store('feedbacks', 'public');
         }
 
         $feedback->update($data);
@@ -84,16 +84,16 @@ class FeedbackController extends Controller
     /**
      * Remove the specified feedback from storage.
      *
-     * @param  Project  $project
+     * @param  Product  $product
      * @param  Feedback  $feedback
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Project $project, Feedback $feedback)
+    public function destroy(Product $product, Feedback $feedback)
     {
         // Check permission - only the creator or admin can delete
-        if (!auth()->user()->can('manage_feedback') && $feedback->account_manager_id !== auth()->id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+//        if (!auth()->user()->can('manage_feedback') && $feedback->account_manager_id !== auth()->id()) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
 
         $feedback->delete();
 

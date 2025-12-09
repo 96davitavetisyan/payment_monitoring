@@ -10,15 +10,15 @@ class Feedback extends Model
     use HasFactory;
 
     protected $fillable = [
-        'project_id',
+        'product_id',
         'account_manager_id',
         'content',
         'file_path'
     ];
 
-    public function project()
+    public function product()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function accountManager()

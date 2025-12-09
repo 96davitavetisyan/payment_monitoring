@@ -15,12 +15,22 @@ class Product extends Model
     protected $fillable = [
         'name',
         'start_date',
-        'status'
+        'status',
+        'own_company_id',
+        'type'
     ];
 
     protected $casts = [
         'start_date' => 'date',
     ];
+
+    /**
+     * Get the own company that owns this product
+     */
+    public function ownCompany()
+    {
+        return $this->belongsTo(OwnCompany::class, 'own_company_id');
+    }
 
     /**
      * Get the contracts for this product
@@ -35,7 +45,7 @@ class Product extends Model
      */
     public function feedbacks()
     {
-        return $this->hasMany(Feedback::class, 'project_id');
+        return $this->hasMany(Feedback::class);
     }
 
     /**
@@ -52,5 +62,21 @@ class Product extends Model
     public function scopeSuspended($query)
     {
         return $query->where('status', 'suspended');
+    }
+
+    /**
+     * Scope to filter local products
+     */
+    public function scopeLocal($query)
+    {
+        return $query->where('type', 'local');
+    }
+
+    /**
+     * Scope to filter international products
+     */
+    public function scopeInternational($query)
+    {
+        return $query->where('type', 'international');
     }
 }

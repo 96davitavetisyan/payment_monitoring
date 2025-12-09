@@ -3,7 +3,7 @@
         <app-header></app-header>
         <div class="container mt-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1>Պրոդուկտներ</h1>
+                <h1>Միջազգային Պրոդուկտներ</h1>
                 <button class="btn btn-success" @click="showCreateModal = true">
                     + Ավելացնել
                 </button>
@@ -148,7 +148,7 @@ export default {
                 name: '',
                 status: 'active',
                 own_company_id: '',
-                type: 'local'
+                type: 'international'
             }
         };
     },
@@ -159,7 +159,7 @@ export default {
     methods: {
         async fetchProducts() {
             try {
-                const response = await axios.get('/api/products?with_contracts=1&type=local');
+                const response = await axios.get('/api/products?with_contracts=1&type=international');
                 this.products = response.data.success ? response.data.data : response.data.data || response.data;
                 console.log('Products loaded:', this.products);
             } catch (error) {
@@ -302,7 +302,7 @@ export default {
                 name: '',
                 status: 'active',
                 own_company_id: '',
-                type: 'local'
+                type: 'international'
             };
         }
     }

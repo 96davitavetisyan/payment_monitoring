@@ -9,6 +9,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\FeedbackController;
 
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,6 +24,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('products/{product}', [ProductController::class, 'update']);
     Route::delete('products/{product}', [ProductController::class, 'destroy']);
     Route::get('products/{product}/companies', [ProductController::class, 'companies']);
+
+    // Product Feedbacks
+    Route::get('products/{product}/feedbacks', [FeedbackController::class, 'index']);
+    Route::post('products/{product}/feedbacks', [FeedbackController::class, 'store']);
+    Route::put('products/{product}/feedbacks/{feedback}', [FeedbackController::class, 'update']);
+    Route::delete('products/{product}/feedbacks/{feedback}', [FeedbackController::class, 'destroy']);
 
     // Partner Companies
     Route::get('partner-companies', [PartnerCompanyController::class, 'index']);

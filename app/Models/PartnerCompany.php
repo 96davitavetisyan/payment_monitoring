@@ -31,4 +31,12 @@ class PartnerCompany extends Model
     {
         return $this->hasMany(Contract::class);
     }
+
+    /**
+     * Get the employees for this partner company
+     */
+    public function employees()
+    {
+        return $this->hasMany(Employee::class);
+    }
 }

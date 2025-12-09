@@ -25,6 +25,7 @@ import Header from './components/Layout/Header.vue';
 import TransactionsIndex from './components/Transactions/TransactionsIndex.vue';
 import FeedbackIndex from './components/Feedbacks/FeedbackIndex.vue';
 import ProductsIndex from './components/Products/ProductsIndex.vue';
+import InternationalProductsIndex from './components/InternationalProducts/ProductsIndex.vue';
 import PartnerCompaniesIndex from './components/PartnerCompanies/PartnerCompaniesIndex.vue';
 import OwnCompaniesIndex from './components/OwnCompanies/OwnCompaniesIndex.vue';
 import ContractsIndex from './components/Contracts/ContractsIndex.vue';
@@ -68,16 +69,62 @@ const routes = [
         name: 'contract-transactions'
     },
     {
+        path: '/products/:productId/feedbacks',
+        component: FeedbackIndex,
+        meta: { requiresAuth: true },
+        name: 'product-feedbacks'
+    },
+    {
         path: '/payment-statistics',
         component: PaymentStatistics,
         meta: { requiresAuth: true },
         name: 'payment-statistics'
     },
+
+    // International Products
+    {
+        path: '/international-products',
+        component: InternationalProductsIndex,
+        meta: { requiresAuth: true },
+        name: 'international-products'
+    },
+    {
+        path: '/international-products/:productId/feedbacks',
+        component: FeedbackIndex,
+        meta: { requiresAuth: true },
+        name: 'international-product-feedbacks'
+    },
+    {
+        path: '/international-partner-companies',
+        component: PartnerCompaniesIndex,
+        meta: { requiresAuth: true },
+        name: 'international-partner-companies'
+    },
+    {
+        path: '/international-own-companies',
+        component: OwnCompaniesIndex,
+        meta: { requiresAuth: true },
+        name: 'international-own-companies'
+    },
+    {
+        path: '/international-contracts',
+        component: ContractsIndex,
+        meta: { requiresAuth: true },
+        name: 'international-contracts'
+    },
+    {
+        path: '/international-payment-statistics',
+        component: PaymentStatistics,
+        meta: { requiresAuth: true },
+        name: 'international-payment-statistics'
+    },
+
+    // Users
     {
         path: '/user-manager',
         component: UsersIndex,
         meta: { requiresAuth: true },
-        name: 'payment-statistics'
+        name: 'user-manager'
     }
 ];
 

@@ -18,6 +18,7 @@
                     <th>Հասցե</th>
                     <th>Հեռախոս</th>
                     <th>Էլ․ Փոստ</th>
+                    <th>Ռեկվիզիտներ</th>
                     <th>Կարգավիճակ</th>
                     <th>Գործողություններ</th>
                 </tr>
@@ -37,6 +38,17 @@
                     <td>{{ company.phone || 'N/A' }}</td>
                     <td>{{ company.email || 'N/A' }}</td>
                     <td>
+                        <div v-if="company.requisites"
+                             @click="copyToClipboard(company.requisites)"
+                             style="cursor: pointer; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                             :title="company.requisites"
+                             class="text-primary">
+                            <i class="fa-solid fa-copy me-1"></i>
+                            {{ company.requisites }}
+                        </div>
+                        <span v-else class="text-muted">-</span>
+                    </td>
+                    <td>
                         <span class="badge" :class="company.is_active ? 'bg-success' : 'bg-secondary'">
                             {{ company.is_active ? 'Ակտիվ' : 'Անգործուն' }}
                         </span>
@@ -51,7 +63,7 @@
                     </td>
                 </tr>
                 <tr v-if="companies.length === 0">
-                    <td colspan="8" class="text-center">No own companies found</td>
+                    <td colspan="9" class="text-center">No own companies found</td>
                 </tr>
                 </tbody>
             </table>
@@ -106,6 +118,14 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label">Ռեկվիզիտներ</label>
+                                <textarea class="form-control" :class="{'is-invalid': errors.requisites}" v-model="currentCompany.requisites" rows="4" placeholder="Մուտքագրեք ընկերության ռեկվիզիտները..."></textarea>
+                                <div class="invalid-feedback" v-if="errors.requisites">
+                                    {{ errors.requisites[0] }}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label">Կարգավիճակ</label>
                                 <select class="form-select" v-model="currentCompany.is_active">
                                     <option :value="true">Ակտիվ</option>
@@ -156,6 +176,7 @@ export default {
                 address: '',
                 phone: '',
                 email: '',
+                requisites: '',
                 is_active: true
             }
         };
@@ -252,8 +273,75 @@ export default {
                 address: '',
                 phone: '',
                 email: '',
+                requisites: '',
                 is_active: true
             };
+        },
+        copyToClipboard(text) {
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Պատճենվեց',
+                        text: 'Ռեկվիզիտները պատճենվեցին',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    this.fallbackCopyToClipboard(text);
+                });
+            } else {
+                // Fallback for older browsers or HTTP
+                this.fallbackCopyToClipboard(text);
+            }
+        },
+        fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (successful) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Պատճենվեց',
+                        text: 'Ռեկվիզիտները պատճենվեցին clipboard-ում',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                } else {
+                    throw new Error('Copy command failed');
+                }
+            } catch (err) {
+                document.body.removeChild(textArea);
+                console.error('Fallback: Failed to copy text: ', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Սխալ',
+                    text: 'Չհաջողվեց պատճենել տեքստը',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
+            }
         },
         showCompanyContracts(company) {
             this.selectedCompany = company;

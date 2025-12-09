@@ -21,6 +21,11 @@ class UpdatePartnerCompanyRequest extends FormRequest
             'contact_email' => 'required|email|max:255',
             'contact_phone' => 'required|string|max:255',
             'is_active' => 'boolean',
+            'employees' => 'nullable|array',
+            'employees.*.name' => 'required|string|max:255',
+            'employees.*.position' => 'nullable|string|max:255',
+            'employees.*.email' => 'nullable|email|max:255',
+            'employees.*.phone' => 'nullable|string|max:255',
         ];
     }
 

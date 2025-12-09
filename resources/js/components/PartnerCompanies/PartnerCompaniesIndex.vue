@@ -44,10 +44,13 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-outline-primary" @click="editCompany(company)">
+                        <button class="btn btn-outline-info" @click="showCompanyEmployees(company)" title="Աշխատակիցներ">
+                            <i class="fa-solid fa-users"></i>
+                        </button>
+                        <button class="btn btn-outline-primary" @click="editCompany(company)" title="Խմբագրել">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button class="btn btn-outline-danger" @click="deleteCompany(company.id)">
+                        <button class="btn btn-outline-danger" @click="deleteCompany(company.id)" title="Ջնջել">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
@@ -112,6 +115,50 @@
                                 </div>
                             </div>
 
+                            <!-- Employees Section -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">Աշխատակիցներ</label>
+                                    <button type="button" class="btn btn-sm btn-outline-success" @click="addEmployee">
+                                        <i class="fa-solid fa-plus"></i> Ավելացնել
+                                    </button>
+                                </div>
+
+                                <div v-for="(employee, index) in currentCompany.employees" :key="index" class="card mb-2">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong>Աշխատակից {{ index + 1 }}</strong>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @click="removeEmployee(index)">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label form-label-sm">Անուն *</label>
+                                                <input type="text" class="form-control form-control-sm" v-model="employee.name" required>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label form-label-sm">Պաշտոն</label>
+                                                <input type="text" class="form-control form-control-sm" v-model="employee.position">
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label form-label-sm">Էլ․ փոստ</label>
+                                                <input type="email" class="form-control form-control-sm" v-model="employee.email">
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label form-label-sm">Հեռախոս</label>
+                                                <input type="text" class="form-control form-control-sm" v-model="employee.phone">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div v-if="currentCompany.employees.length === 0" class="text-muted small">
+                                    Աշխատակիցներ չեն ավելացվել
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Կարգավիճակ</label>
                                 <select class="form-select" v-model="currentCompany.is_active">
@@ -135,6 +182,47 @@
                 :contracts="companyContracts"
                 @close="closeContractsModal"
             />
+
+            <!-- Employees Modal -->
+            <div class="modal" tabindex="-1" :class="{ 'show d-block': showEmployeesModal }" style="background: rgba(0,0,0,0.5);" v-if="showEmployeesModal" @click.self="closeEmployeesModal">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Աշխատակիցներ - {{ selectedCompany?.name || '' }}</h5>
+                            <button type="button" class="btn-close" @click="closeEmployeesModal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div v-if="companyEmployees.length > 0">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Անուն</th>
+                                            <th>Պաշտոն</th>
+                                            <th>Էլ․ փոստ</th>
+                                            <th>Հեռախոս</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="employee in companyEmployees" :key="employee.id">
+                                            <td>{{ employee.name }}</td>
+                                            <td>{{ employee.position || '-' }}</td>
+                                            <td>{{ employee.email || '-' }}</td>
+                                            <td>{{ employee.phone || '-' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else class="text-center text-muted py-4">
+                                <i class="fa-solid fa-users fa-3x mb-3"></i>
+                                <p>Աշխատակիցներ չեն գտնվել</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" @click="closeEmployeesModal">Փակել</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -152,10 +240,12 @@ export default {
             companies: [],
             showCreateModal: false,
             showContractsModal: false,
+            showEmployeesModal: false,
             isEditing: false,
             errors: {},
             selectedCompany: null,
             companyContracts: [],
+            companyEmployees: [],
             currentCompany: {
                 name: '',
                 tax_id: '',
@@ -163,7 +253,8 @@ export default {
                 contact_person_position: '',
                 contact_email: '',
                 contact_phone: '',
-                is_active: true
+                is_active: true,
+                employees: []
             }
         };
     },
@@ -173,7 +264,7 @@ export default {
     methods: {
         async fetchCompanies() {
             try {
-                const response = await axios.get('/api/partner-companies?with_contracts=1');
+                const response = await axios.get('/api/partner-companies?with_contracts=1&with_employees=1');
                 this.companies = response.data.data;
             } catch (error) {
                 console.error('Error fetching partner companies:', error);
@@ -191,7 +282,10 @@ export default {
             }
         },
         editCompany(company) {
-            this.currentCompany = { ...company };
+            this.currentCompany = {
+                ...company,
+                employees: company.employees ? [...company.employees] : []
+            };
             this.isEditing = true;
             this.showCreateModal = true;
         },
@@ -307,8 +401,20 @@ export default {
                 contact_person_position: '',
                 contact_email: '',
                 contact_phone: '',
-                is_active: true
+                is_active: true,
+                employees: []
             };
+        },
+        addEmployee() {
+            this.currentCompany.employees.push({
+                name: '',
+                position: '',
+                email: '',
+                phone: ''
+            });
+        },
+        removeEmployee(index) {
+            this.currentCompany.employees.splice(index, 1);
         },
         showCompanyContracts(company) {
             this.selectedCompany = company;
@@ -319,6 +425,16 @@ export default {
             this.showContractsModal = false;
             this.selectedCompany = null;
             this.companyContracts = [];
+        },
+        showCompanyEmployees(company) {
+            this.selectedCompany = company;
+            this.companyEmployees = company.employees || [];
+            this.showEmployeesModal = true;
+        },
+        closeEmployeesModal() {
+            this.showEmployeesModal = false;
+            this.selectedCompany = null;
+            this.companyEmployees = [];
         }
     }
 };

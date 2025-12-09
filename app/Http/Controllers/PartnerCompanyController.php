@@ -23,6 +23,11 @@ class PartnerCompanyController extends Controller
             }]);
         }
 
+        // Optionally load employees
+        if ($request->has('with_employees')) {
+            $query->with('employees');
+        }
+
         $companies = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
@@ -34,14 +39,27 @@ class PartnerCompanyController extends Controller
     public function store(StorePartnerCompanyRequest $request)
     {
         try {
-            $company = PartnerCompany::create($request->validated());
+            $data = $request->validated();
+            $employees = $data['employees'] ?? [];
+            unset($data['employees']);
+
+            $company = PartnerCompany::create($data);
+
+            // Create employees if provided
+            if (!empty($employees)) {
+                foreach ($employees as $employeeData) {
+                    if (!empty($employeeData['name'])) {
+                        $company->employees()->create($employeeData);
+                    }
+                }
+            }
 
             $this->logActivity('create', $company, null, $company->toArray());
 
             return response()->json([
                 'success' => true,
                 'message' => 'Partner company created successfully',
-                'data' => $company
+                'data' => $company->load('employees')
             ], 201);
         } catch (\Exception $e) {
             $this->logActivity('create', new PartnerCompany(), null, $request->validated(), 'failed', $e->getMessage());
@@ -66,14 +84,30 @@ class PartnerCompanyController extends Controller
     {
         try {
             $oldValues = $partnerCompany->toArray();
-            $partnerCompany->update($request->validated());
+            $data = $request->validated();
+            $employees = $data['employees'] ?? [];
+            unset($data['employees']);
+
+            $partnerCompany->update($data);
+
+            // Update employees
+            // Delete existing employees and recreate them
+            $partnerCompany->employees()->delete();
+
+            if (!empty($employees)) {
+                foreach ($employees as $employeeData) {
+                    if (!empty($employeeData['name'])) {
+                        $partnerCompany->employees()->create($employeeData);
+                    }
+                }
+            }
 
             $this->logActivity('update', $partnerCompany, $oldValues, $partnerCompany->fresh()->toArray());
 
             return response()->json([
                 'success' => true,
                 'message' => 'Partner company updated successfully',
-                'data' => $partnerCompany->fresh()
+                'data' => $partnerCompany->fresh()->load('employees')
             ]);
         } catch (\Exception $e) {
             $this->logActivity('update', $partnerCompany, $oldValues, $request->validated(), 'failed', $e->getMessage());

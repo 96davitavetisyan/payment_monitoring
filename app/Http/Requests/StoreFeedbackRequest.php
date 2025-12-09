@@ -13,7 +13,8 @@ class StoreFeedbackRequest extends FormRequest
      */
     public function authorize()
     {
-        return $this->user()->can('create_feedback');
+//        return $this->user()->can('create_feedback');
+        return true;
     }
 
     /**
@@ -25,7 +26,7 @@ class StoreFeedbackRequest extends FormRequest
     {
         return [
             'content' => 'required|string|min:10',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,xlsx,xls|max:10240',
         ];
     }
 

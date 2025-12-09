@@ -20,6 +20,7 @@ class UpdateOwnCompanyRequest extends FormRequest
             'address' => 'required|string|max:500',
             'phone' => 'required|string|max:255',
             'email' => 'required|email|max:255',
+            'requisites' => 'nullable|string',
             'is_active' => 'boolean',
         ];
     }

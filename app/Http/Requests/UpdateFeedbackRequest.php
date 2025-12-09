@@ -13,11 +13,12 @@ class UpdateFeedbackRequest extends FormRequest
      */
     public function authorize()
     {
-        $feedback = $this->route('feedback');
-        
-        // User can edit if they have manage_feedback permission or if they created the feedback
-        return $this->user()->can('manage_feedback') || 
-               $feedback->account_manager_id === $this->user()->id;
+//        $feedback = $this->route('feedback');
+//
+//        // User can edit if they have manage_feedback permission or if they created the feedback
+//        return $this->user()->can('manage_feedback') ||
+//               $feedback->account_manager_id === $this->user()->id;
+        return true;
     }
 
     /**
@@ -29,7 +30,7 @@ class UpdateFeedbackRequest extends FormRequest
     {
         return [
             'content' => 'required|string|min:10',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,xlsx,xls|max:10240',
         ];
     }
 

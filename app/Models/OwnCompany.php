@@ -17,6 +17,7 @@ class OwnCompany extends Model
         'address',
         'phone',
         'email',
+        'requisites',
         'is_active',
     ];
 

@@ -2,25 +2,46 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <span class="navbar-brand">Վճարումների մոնիթորինգ</span>
-            <div class="navbar-nav me-auto">
-                <router-link to="/products" class="nav-link text-white" active-class="fw-bold">
-                    Պրոդուկտներ
-                </router-link>
-                <router-link to="/partner-companies" class="nav-link text-white" active-class="fw-bold">
-                    Գործընկերներ
-                </router-link>
-                <router-link to="/own-companies" class="nav-link text-white" active-class="fw-bold">
-                    Մեր ընկերությունները
-                </router-link>
-                <router-link to="/contracts" class="nav-link text-white" active-class="fw-bold">
-                    Պայմանագրեր
-                </router-link>
-                <router-link to="/payment-statistics" class="nav-link text-white" active-class="fw-bold">
-                     Վիճակագրություն
-                </router-link>
-                <router-link to="/user-manager" class="nav-link text-white" active-class="fw-bold">
-                    Օգտատերեր
-                </router-link>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!-- Local Products Section -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="localProductsDropdown" role="button" data-bs-toggle="dropdown">
+                            Մեր պրոդուկտներ
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><router-link to="/products" class="dropdown-item">Պրոդուկտներ</router-link></li>
+                            <li><router-link to="/partner-companies" class="dropdown-item">Գործընկերներ</router-link></li>
+                            <li><router-link to="/own-companies" class="dropdown-item">Մեր ընկերությունները</router-link></li>
+                            <li><router-link to="/contracts" class="dropdown-item">Պայմանագրեր</router-link></li>
+                            <li><router-link to="/payment-statistics" class="dropdown-item">Վիճակագրություն</router-link></li>
+                        </ul>
+                    </li>
+
+                    <!-- International Products Section -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="intProductsDropdown" role="button" data-bs-toggle="dropdown">
+                            Միջազգային պրոդուկտներ
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><router-link to="/international-products" class="dropdown-item">Պրոդուկտներ</router-link></li>
+                            <li><router-link to="/international-partner-companies" class="dropdown-item">Գործընկերներ</router-link></li>
+                            <li><router-link to="/international-own-companies" class="dropdown-item">Մեր ընկերությունները</router-link></li>
+                            <li><router-link to="/international-contracts" class="dropdown-item">Պայմանագրեր</router-link></li>
+                            <li><router-link to="/international-payment-statistics" class="dropdown-item">Վիճակագրություն</router-link></li>
+                        </ul>
+                    </li>
+
+                    <!-- Users -->
+                    <li class="nav-item">
+                        <router-link to="/user-manager" class="nav-link text-white" active-class="fw-bold">
+                            Օգտատերեր
+                        </router-link>
+                    </li>
+                </ul>
             </div>
             <div class="d-flex align-items-center">
                 <span class="text-white me-3">

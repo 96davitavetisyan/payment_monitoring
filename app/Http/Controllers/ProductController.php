@@ -20,7 +20,12 @@ class ProductController extends Controller
 //            return response()->json(['message' => 'Unauthorized'], 403);
 //        }
 
-        $query = Product::query();
+        $query = Product::query()->with('ownCompany');
+
+        // Filter by type
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
 
         if ($request->has('with_contracts')) {
             $query->with(['contracts' => function($q) {
