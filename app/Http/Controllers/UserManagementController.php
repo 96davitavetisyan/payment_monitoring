@@ -18,7 +18,7 @@ class UserManagementController extends Controller
 //        }
 
         $users = User::with(['roles', 'contracts'])->get();
-//dd($users);
+
         return response()->json([
             'success' => true,
             'data' => $users
@@ -135,7 +135,7 @@ class UserManagementController extends Controller
                 'message' => 'You cannot delete yourself'
             ], 400);
         }
-dd($user);
+
         $user->delete();
 
         return response()->json([
@@ -151,11 +151,127 @@ dd($user);
 //            return response()->json(['message' => 'Unauthorized'], 403);
 //        }
 
-        $roles = Role::all();
+        $roles = Role::with('permissions')->get();
+
+        // Add users count manually
+        $roles->each(function ($role) {
+            $role->users_count = User::role($role->name)->count();
+        });
 
         return response()->json([
             'success' => true,
             'data' => $roles
+        ]);
+    }
+
+    public function getPermissions()
+    {
+        // Only super-admin can view permissions
+//        if (!auth()->user()->hasRole('super-admin')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
+
+        $permissions = \Spatie\Permission\Models\Permission::all();
+
+        return response()->json([
+            'success' => true,
+            'data' => $permissions
+        ]);
+    }
+
+    public function createRole(Request $request)
+    {
+        // Only super-admin can create roles
+//        if (!auth()->user()->hasRole('super-admin')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'description' => 'nullable|string|max:500'
+        ]);
+
+        $role = Role::create([
+            'name' => $validated['name'],
+            'guard_name' => 'web'
+        ]);
+
+        // If description is provided, we might need to add it to metadata or ignore it
+        // Spatie's Role doesn't have description field by default
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Role created successfully',
+            'data' => $role
+        ], 201);
+    }
+
+    public function updateRole(Request $request, Role $role)
+    {
+        // Only super-admin can update roles
+//        if (!auth()->user()->hasRole('super-admin')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'description' => 'nullable|string|max:500'
+        ]);
+
+        $role->update([
+            'name' => $validated['name']
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Role updated successfully',
+            'data' => $role
+        ]);
+    }
+
+    public function deleteRole(Role $role)
+    {
+        // Only super-admin can delete roles
+//        if (!auth()->user()->hasRole('super-admin')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
+
+        // Check if role has users
+        $usersCount = User::role($role->name)->count();
+        if ($usersCount > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete role with assigned users'
+            ], 400);
+        }
+
+        $role->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Role deleted successfully'
+        ]);
+    }
+
+    public function updateRolePermissions(Request $request, Role $role)
+    {
+        // Only super-admin can update role permissions
+//        if (!auth()->user()->hasRole('super-admin')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
+
+        $validated = $request->validate([
+            'permissions' => 'required|array',
+            'permissions.*' => 'exists:permissions,id'
+        ]);
+
+        // Sync permissions to the role
+        $role->syncPermissions($validated['permissions']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Role permissions updated successfully',
+            'data' => $role->load('permissions')
         ]);
     }
 }

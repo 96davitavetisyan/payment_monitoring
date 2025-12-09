@@ -16,9 +16,9 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        if (!auth()->user()->can('view_all_products')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+//        if (!auth()->user()->can('view_all_products')) {
+//            return response()->json(['message' => 'Unauthorized'], 403);
+//        }
 
         $query = Product::query();
 

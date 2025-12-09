@@ -25,9 +25,9 @@
             <div class="d-flex align-items-center">
                 <span class="text-white me-3">
                     <strong>{{ user.name }}</strong>
-                    <span v-if="user.roles && user.roles.length" class="badge bg-light text-dark ms-2">
-                        {{ user.roles[0] }}
-                    </span>
+<!--                    <span v-if="user.roles && user.roles.length" class="badge bg-light text-dark ms-2">-->
+<!--                        {{ user.roles[0] }}-->
+<!--                    </span>-->
                 </span>
                 <button class="btn btn-outline-light btn-sm" @click="logout">Ելք</button>
             </div>

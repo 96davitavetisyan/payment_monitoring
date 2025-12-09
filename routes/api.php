@@ -65,12 +65,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     // Contracts
+    // User Management
     Route::get('user-management', [UserManagementController::class, 'index']);
     Route::post('user-management', [UserManagementController::class, 'store']);
     Route::get('user-management/{currentUser}', [UserManagementController::class, 'show']);
     Route::put('user-management/{currentUser}', [UserManagementController::class, 'update']);
     Route::delete('user-management/{currentUser}', [UserManagementController::class, 'destroy']);
+
+    // Roles & Permissions
     Route::get('roles', [UserManagementController::class, 'getRoles']);
+    Route::post('roles', [UserManagementController::class, 'createRole']);
+    Route::put('roles/{role}', [UserManagementController::class, 'updateRole']);
+    Route::delete('roles/{role}', [UserManagementController::class, 'deleteRole']);
+    Route::get('permissions', [UserManagementController::class, 'getPermissions']);
+    Route::put('roles/{role}/permissions', [UserManagementController::class, 'updateRolePermissions']);
 
 });
 

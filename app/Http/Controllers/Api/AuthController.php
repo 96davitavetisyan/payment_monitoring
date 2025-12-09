@@ -54,13 +54,12 @@ class AuthController extends Controller
         $user->load('roles.permissions');
 
         $permissions = $user->getAllPermissions()->pluck('name')->unique()->values();
-        $roles = $user->roles->pluck('name');
 
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'roles' => $roles,
+            'roles' => $user->roles,
             'permissions' => $permissions,
         ]);
     }
