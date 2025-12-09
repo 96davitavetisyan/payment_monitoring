@@ -14,6 +14,7 @@ class UpdatePartnerCompanyRequest extends FormRequest
     public function rules()
     {
         return [
+            'type' => 'sometimes|required|in:merchant,international',
             'name' => 'sometimes|required|string|max:255',
             'tax_id' => 'required|string|max:255',
             'contact_person' => 'required|string|max:255',

@@ -10,8 +10,8 @@
             </div>
 
             <!-- Own Companies Table -->
-            <table class="table table-striped table-bordered">
-                <thead class="table-dark">
+            <table class="table table-striped table-bordered" :style="{ borderColor: companyType === 'merchant' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
+                <thead :class="companyType === 'merchant' ? 'table-primary' : 'table-dark'">
                 <tr>
                     <th>Անուն</th>
                     <th>ՀՎՀՀ</th>
@@ -180,6 +180,11 @@ export default {
                 is_active: true
             }
         };
+    },
+    computed: {
+        companyType() {
+            return this.$route.path.startsWith('/international') ? 'international' : 'merchant';
+        }
     },
     mounted() {
         this.fetchCompanies();

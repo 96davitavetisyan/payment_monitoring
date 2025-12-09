@@ -10,8 +10,8 @@
             </div>
 
             <!-- Partner Companies Table -->
-            <table class="table table-striped table-bordered">
-                <thead class="table-dark">
+            <table class="table table-striped table-bordered" :style="{ borderColor: partnerType === 'merchant' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
+                <thead :class="partnerType === 'merchant' ? 'table-primary' : 'table-dark'">
                 <tr>
                     <th>Կազմակերպության անվանումը</th>
                     <th>ՀՎՀՀ</th>
@@ -247,6 +247,7 @@ export default {
             companyContracts: [],
             companyEmployees: [],
             currentCompany: {
+                type: 'merchant',
                 name: '',
                 tax_id: '',
                 contact_person: '',
@@ -258,13 +259,18 @@ export default {
             }
         };
     },
+    computed: {
+        partnerType() {
+            return this.$route.name === 'international-partner-companies' ? 'international' : 'merchant';
+        }
+    },
     mounted() {
         this.fetchCompanies();
     },
     methods: {
         async fetchCompanies() {
             try {
-                const response = await axios.get('/api/partner-companies?with_contracts=1&with_employees=1');
+                const response = await axios.get(`/api/partner-companies?with_contracts=1&with_employees=1&type=${this.partnerType}`);
                 this.companies = response.data.data;
             } catch (error) {
                 console.error('Error fetching partner companies:', error);
@@ -292,10 +298,11 @@ export default {
 
         async saveCompany() {
             try {
+                const companyData = { ...this.currentCompany, type: this.partnerType };
                 if (this.isEditing) {
-                    await axios.put(`/api/partner-companies/${this.currentCompany.id}`, this.currentCompany);
+                    await axios.put(`/api/partner-companies/${this.currentCompany.id}`, companyData);
                 } else {
-                    await axios.post('/api/partner-companies', this.currentCompany);
+                    await axios.post('/api/partner-companies', companyData);
                 }
 
                 this.fetchCompanies();
@@ -395,6 +402,7 @@ export default {
             this.showCreateModal = false;
             this.errors = {};
             this.currentCompany = {
+                type: this.partnerType,
                 name: '',
                 tax_id: '',
                 contact_person: '',

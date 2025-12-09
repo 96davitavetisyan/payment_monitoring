@@ -16,6 +16,11 @@ class PartnerCompanyController extends Controller
     {
         $query = PartnerCompany::query();
 
+        // Filter by type if provided
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
+
         // Optionally load contracts with related data
         if ($request->has('with_contracts')) {
             $query->with(['contracts' => function($q) {

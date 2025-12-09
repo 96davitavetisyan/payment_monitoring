@@ -11,6 +11,7 @@ class PartnerCompany extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'type',
         'name',
         'tax_id',
         'contact_person',

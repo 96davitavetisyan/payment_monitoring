@@ -41,7 +41,7 @@
             </div>
 
             <!-- Contracts Table -->
-            <div class="table-responsive"><vue-good-table
+            <div class="table-responsive" :style="{ border: contractType === 'merchant' ? '2px solid #0d6efd' : '2px solid #212529' }"><vue-good-table
                 :columns="visibleColumns"
                 :rows="contracts"
                 :search-options="{
@@ -56,7 +56,7 @@
                     dropdownAllowAll: false
                 }"
                 :row-style-class="getRowClass"
-                styleClass="vgt-table striped bordered"
+                :styleClass="'vgt-table striped bordered ' + (contractType === 'merchant' ? 'merchant-table' : 'international-table')"
             >
                 <template slot="table-row" slot-scope="props">
         <span v-if="props.column.field === 'actions'">
@@ -358,6 +358,9 @@ export default {
         },
         visibleColumns() {
             return this.allColumns.filter(col => col.visible);
+        },
+        contractType() {
+            return this.$route.path.startsWith('/international') ? 'international' : 'merchant';
         }
     },
     methods: {
@@ -832,9 +835,18 @@ export default {
     }
 
     .vgt-table thead th {
-        background-color: #343a40 !important;
         font-weight: 600;
         padding: 0.75rem !important;
+    }
+
+    .merchant-table thead th {
+        background-color: #0d6efd !important;
+        color: white !important;
+    }
+
+    .international-table thead th {
+        background-color: #343a40 !important;
+        color: white !important;
     }
 
     .vgt-table tbody td {

@@ -1,5 +1,5 @@
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark" :class="isInternationalRoute ? 'bg-dark' : 'bg-primary'">
         <div class="container-fluid">
             <span class="navbar-brand">Վճարումների մոնիթորինգ</span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -35,21 +35,23 @@
                         </ul>
                     </li>
 
-                    <!-- Users -->
-                    <li class="nav-item">
-                        <router-link to="/user-manager" class="nav-link text-white" active-class="fw-bold">
-                            Օգտատերեր
-                        </router-link>
-                    </li>
                 </ul>
             </div>
             <div class="d-flex align-items-center">
                 <span class="text-white me-3">
                     <strong>{{ user.name }}</strong>
-<!--                    <span v-if="user.roles && user.roles.length" class="badge bg-light text-dark ms-2">-->
-<!--                        {{ user.roles[0] }}-->
-<!--                    </span>-->
                 </span>
+
+                <!-- Settings Dropdown -->
+                <div class="nav-item dropdown me-2">
+                    <a class="nav-link dropdown-toggle text-white" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-gear"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><router-link to="/user-manager" class="dropdown-item">Օգտատերեր</router-link></li>
+                    </ul>
+                </div>
+
                 <button class="btn btn-outline-light btn-sm" @click="logout">Ելք</button>
             </div>
         </div>
@@ -63,6 +65,11 @@ export default {
     data() {
         return {
             user: {}
+        }
+    },
+    computed: {
+        isInternationalRoute() {
+            return this.$route.path.startsWith('/international');
         }
     },
     created() {

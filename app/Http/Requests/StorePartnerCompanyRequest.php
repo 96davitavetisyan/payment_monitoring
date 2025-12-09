@@ -24,6 +24,7 @@ class StorePartnerCompanyRequest extends FormRequest
     public function rules()
     {
         return [
+            'type' => 'required|in:merchant,international',
             'name' => 'required|string|max:255',
             'tax_id' => 'required|string|max:255',
             'contact_person' => 'required|string|max:255',
