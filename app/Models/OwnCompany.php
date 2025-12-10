@@ -32,4 +32,12 @@ class OwnCompany extends Model
     {
         return $this->hasMany(Contract::class);
     }
+
+    /**
+     * Get the files for this own company
+     */
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

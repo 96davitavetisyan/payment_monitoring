@@ -10,8 +10,8 @@
             </div>
 
             <!-- Partner Companies Table -->
-            <table class="table table-striped table-bordered" :style="{ borderColor: partnerType === 'merchant' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
-                <thead :class="partnerType === 'merchant' ? 'table-primary' : 'table-dark'">
+            <table class="table table-striped table-bordered" :style="{ borderColor: partnerType === 'local' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
+                <thead :class="partnerType === 'local' ? 'table-primary' : 'table-dark'">
                 <tr>
                     <th>Կազմակերպության անվանումը</th>
                     <th>ՀՎՀՀ</th>
@@ -247,7 +247,7 @@ export default {
             companyContracts: [],
             companyEmployees: [],
             currentCompany: {
-                type: 'merchant',
+                type: 'local',
                 name: '',
                 tax_id: '',
                 contact_person: '',
@@ -261,7 +261,7 @@ export default {
     },
     computed: {
         partnerType() {
-            return this.$route.name === 'international-partner-companies' ? 'international' : 'merchant';
+            return this.$route.name === 'international-partner-companies' ? 'international' : 'local';
         }
     },
     mounted() {

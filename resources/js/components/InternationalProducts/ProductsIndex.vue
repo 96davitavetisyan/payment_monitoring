@@ -10,8 +10,8 @@
             </div>
 
             <!-- Products Table -->
-            <table class="table table-striped table-bordered" :style="{ borderColor: productType === 'merchant' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
-                <thead :class="productType === 'merchant' ? 'table-primary' : 'table-dark'">
+            <table class="table table-striped table-bordered" :style="{ borderColor: productType === 'local' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
+                <thead :class="productType === 'local' ? 'table-primary' : 'table-dark'">
                 <tr>
                     <th>ID</th>
                     <th>Անուն</th>
@@ -154,7 +154,7 @@ export default {
     },
     computed: {
         productType() {
-            return this.$route.path.startsWith('/international') ? 'international' : 'merchant';
+            return this.$route.path.startsWith('/international') ? 'international' : 'local';
         }
     },
     mounted() {

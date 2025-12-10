@@ -21,7 +21,8 @@ class UpdateOwnCompanyRequest extends FormRequest
             'phone' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'requisites' => 'nullable|string',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable',
+            'files.*' => 'nullable|file|max:10240',
         ];
     }
 
@@ -43,7 +44,9 @@ class UpdateOwnCompanyRequest extends FormRequest
             'address.max' => 'Հասցեն չի կարող գերազանցել 500 նիշը',
             'phone.required' => 'Հեռախոսահամարը պարտադիր է',
             'email.required' => 'Էլ․ Փոստը պարտադիր է',
-            'is_active.boolean' => 'Ակտիվության դաշտը պետք է լինի True կամ False'
+            'is_active.boolean' => 'Ակտիվության դաշտը պետք է լինի True կամ False',
+            'files.*.file' => 'Յուրաքանչյուր ֆայլ պետք է լինի վավեր',
+            'files.*.max' => 'Յուրաքանչյուր ֆայլ չպետք է գերազանցի 10MB',
         ];
     }
 }

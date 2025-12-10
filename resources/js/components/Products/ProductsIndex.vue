@@ -10,8 +10,8 @@
             </div>
 
             <!-- Products Table -->
-            <table class="table table-striped table-bordered" :style="{ borderColor: productType === 'merchant' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
-                <thead :class="productType === 'merchant' ? 'table-primary' : 'table-dark'">
+            <table class="table table-striped table-bordered" :style="{ borderColor: productType === 'local' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
+                <thead :class="productType === 'local' ? 'table-primary' : 'table-dark'">
                 <tr>
                     <th>ID</th>
                     <th>Անուն</th>
@@ -154,7 +154,7 @@ export default {
     },
     computed: {
         productType() {
-            return this.$route.path.startsWith('/international') ? 'international' : 'merchant';
+            return this.$route.path.startsWith('/international') ? 'internationals' : 'local';
         }
     },
     mounted() {
@@ -163,6 +163,7 @@ export default {
     },
     methods: {
         async fetchProducts() {
+            console.log(this.productType)
             try {
                 const response = await axios.get('/api/products?with_contracts=1&type=local');
                 this.products = response.data.success ? response.data.data : response.data.data || response.data;
@@ -172,6 +173,7 @@ export default {
                 alert('Failed to load products: ' + (error.response?.data?.message || error.message));
             }
         },
+
         async fetchOwnCompanies() {
             try {
                 const response = await axios.get('/api/own-companies');
@@ -180,6 +182,7 @@ export default {
                 console.error('Error fetching own companies:', error);
             }
         },
+
         getStatusClass(status) {
             const classes = {
                 'active': 'bg-success',
@@ -189,26 +192,31 @@ export default {
             };
             return classes[status] || 'bg-secondary';
         },
+
         showProductContracts(product) {
             this.selectedProduct = product;
             this.productContracts = product.contracts || [];
             this.showContractsModal = true;
         },
+
         closeContractsModal() {
             this.showContractsModal = false;
             this.selectedProduct = null;
             this.productContracts = [];
         },
+
         editProduct(product) {
             this.currentProduct = {
                 id: product.id,
                 name: product.name,
                 status: product.status,
-                own_company_id: product.own_company_id || ''
+                own_company_id: product.own_company_id || '',
+                type: product.type
             };
             this.isEditing = true;
             this.showCreateModal = true;
         },
+
         async saveProduct() {
             try {
                 if (this.isEditing) {
@@ -260,6 +268,7 @@ export default {
                 }
             }
         },
+
         async deleteProduct(id) {
             try {
                 const result = await Swal.fire({
@@ -300,6 +309,7 @@ export default {
                 });
             }
         },
+
         closeModal() {
             this.showCreateModal = false;
             this.errors = {};
@@ -309,6 +319,8 @@ export default {
                 own_company_id: '',
                 type: 'local'
             };
+
+            this.isEditing = false;
         }
     }
 };

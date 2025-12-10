@@ -23,7 +23,7 @@ class FeedbackController extends Controller
 //        }
 
         $feedbacks = $product->feedbacks()->with('accountManager')->latest()->get();
-
+dd($feedbacks);
         return response()->json([
             'success' => true,
             'data' => $feedbacks

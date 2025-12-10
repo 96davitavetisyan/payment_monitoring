@@ -14,7 +14,7 @@ class AddTypeToPartnerCompaniesTable extends Migration
     public function up()
     {
         Schema::table('partner_companies', function (Blueprint $table) {
-            $table->enum('type', ['merchant', 'international'])->default('merchant')->after('id');
+            $table->enum('type', ['local', 'international'])->default('local')->after('id');
         });
     }
 

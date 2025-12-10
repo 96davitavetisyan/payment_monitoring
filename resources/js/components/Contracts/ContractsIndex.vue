@@ -41,7 +41,7 @@
             </div>
 
             <!-- Contracts Table -->
-            <div class="table-responsive" :style="{ border: contractType === 'merchant' ? '2px solid #0d6efd' : '2px solid #212529' }"><vue-good-table
+            <div class="table-responsive" :style="{ border: contractType === 'local' ? '2px solid #0d6efd' : '2px solid #212529' }"><vue-good-table
                 :columns="visibleColumns"
                 :rows="contracts"
                 :search-options="{
@@ -56,7 +56,7 @@
                     dropdownAllowAll: false
                 }"
                 :row-style-class="getRowClass"
-                :styleClass="'vgt-table striped bordered ' + (contractType === 'merchant' ? 'merchant-table' : 'international-table')"
+                :styleClass="'vgt-table striped bordered ' + (contractType === 'local' ? 'merchant-table' : 'international-table')"
             >
                 <template slot="table-row" slot-scope="props">
         <span v-if="props.column.field === 'actions'">
@@ -360,7 +360,7 @@ export default {
             return this.allColumns.filter(col => col.visible);
         },
         contractType() {
-            return this.$route.path.startsWith('/international') ? 'international' : 'merchant';
+            return this.$route.path.startsWith('/international') ? 'international' : 'local';
         }
     },
     methods: {
@@ -839,7 +839,7 @@ export default {
         padding: 0.75rem !important;
     }
 
-    .merchant-table thead th {
+    .local-table thead th {
         background-color: #0d6efd !important;
         color: white !important;
     }

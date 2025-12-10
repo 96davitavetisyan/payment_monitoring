@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\PaymentReminderMail;
 use App\Models\Transaction;
-use App\Models\TransactionFile;
+use App\Models\File;
 use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -52,10 +52,9 @@ class TransactionController extends Controller
 
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
-                    $path = $file->store('transaction_files');
+                    $path = $file->store('transaction_files', 'public');
 
-                    TransactionFile::create([
-                        'transaction_id' => $transaction->id,
+                    $transaction->files()->create([
                         'file_path' => $path,
                         'file_name' => $file->getClientOriginalName(),
                         'file_type' => $file->getMimeType(),
@@ -63,7 +62,6 @@ class TransactionController extends Controller
                     ]);
                 }
             }
-
             $this->logActivity('create', $transaction, null, $transaction->toArray());
 
             return response()->json([
@@ -134,10 +132,9 @@ class TransactionController extends Controller
 
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
-                    $path = $file->store('transaction_files');
+                    $path = $file->store('transaction_files', 'public');
 
-                    $transactionFile = TransactionFile::create([
-                        'transaction_id' => $transaction->id,
+                    $transactionFile = $transaction->files()->create([
                         'file_path' => $path,
                         'file_name' => $file->getClientOriginalName(),
                         'file_type' => $file->getMimeType(),
@@ -166,9 +163,17 @@ class TransactionController extends Controller
         }
     }
 
-    public function deleteFile(Transaction $transaction, TransactionFile $file)
+    public function deleteFile(Transaction $transaction, File $file)
     {
         try {
+            // Check if file belongs to this transaction
+            if ($file->fileable_id != $transaction->id || $file->fileable_type != 'App\Models\Transaction') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File does not belong to this transaction'
+                ], 403);
+            }
+
             Storage::delete($file->file_path);
             $file->delete();
 
@@ -204,10 +209,9 @@ class TransactionController extends Controller
             }
 
             $file = $request->file('file');
-            $path = $file->store('transaction_files');
+            $path = $file->store('transaction_files', 'public');
 
-            $transactionFile = TransactionFile::create([
-                'transaction_id' => $transaction->id,
+            $transactionFile = $transaction->files()->create([
                 'file_path' => $path,
                 'file_name' => $file->getClientOriginalName(),
                 'file_type' => $file->getMimeType(),
@@ -273,10 +277,9 @@ class TransactionController extends Controller
 
         try {
 
-            $path = $request->file('file')->store('transaction_files');
+            $path = $request->file('file')->store('transaction_files', 'public');
 
-            TransactionFile::create([
-                'transaction_id' => $transaction->id,
+            $transaction->files()->create([
                 'file_path' => $path,
                 'file_name' => $request->file('file')->getClientOriginalName(),
                 'file_type' => $request->file('file')->getMimeType(),
@@ -301,7 +304,7 @@ class TransactionController extends Controller
             ], 500);
         }
     }
-    public function downloadFile(TransactionFile $file)
+    public function downloadFile(File $file)
     {
         if (!$file->file_path || !Storage::exists($file->file_path)) {
             abort(404, 'File not found');

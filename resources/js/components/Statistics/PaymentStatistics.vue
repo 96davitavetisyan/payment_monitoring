@@ -12,8 +12,8 @@
 
             <!-- Statistics Table -->
             <div class="table-responsive">
-                <table class="table table-striped table-bordered table-hover" :style="{ borderColor: statisticsType === 'merchant' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
-                    <thead :class="statisticsType === 'merchant' ? 'table-primary' : 'table-dark'">
+                <table class="table table-striped table-bordered table-hover" :style="{ borderColor: statisticsType === 'local' ? '#0d6efd' : '#212529', borderWidth: '2px' }">
+                    <thead :class="statisticsType === 'local' ? 'table-primary' : 'table-dark'">
                         <tr>
                             <th>Գործընկեր</th>
                             <th>Կոնտակտ</th>
@@ -138,7 +138,7 @@ export default {
             return this.statistics.filter(s => s.category === 'good').length;
         },
         statisticsType() {
-            return this.$route.path.startsWith('/international') ? 'international' : 'merchant';
+            return this.$route.path.startsWith('/international') ? 'international' : 'local';
         }
     },
     mounted() {

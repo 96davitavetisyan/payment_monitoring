@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('own-companies/{ownCompany}', [OwnCompanyController::class, 'show']);
     Route::put('own-companies/{ownCompany}', [OwnCompanyController::class, 'update']);
     Route::delete('own-companies/{ownCompany}', [OwnCompanyController::class, 'destroy']);
+    Route::delete('own-companies/{ownCompany}/files/{file}', [OwnCompanyController::class, 'deleteFile']);
 
     // Contracts
     Route::get('contracts', [ContractController::class, 'index']);
